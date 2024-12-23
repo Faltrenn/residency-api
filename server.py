@@ -3,6 +3,10 @@ from http import HTTPStatus
 from sys import argv
 
 
+class DB:
+    users = {"manel": "password"}
+
+
 class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(HTTPStatus.OK, "Server working")
