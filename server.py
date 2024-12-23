@@ -1,5 +1,6 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from http import HTTPStatus
+from sys import argv
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -9,8 +10,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    server = HTTPServer(("localhost", 8000), RequestHandler)
-    print("Server started...")
+    server = HTTPServer((argv[1], int(argv[2])), RequestHandler)
+    print(f"Server started at {argv[1]}:{argv[2]}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
