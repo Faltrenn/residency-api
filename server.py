@@ -1,6 +1,8 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from http import HTTPStatus
+import re
 from sys import argv
+import json
 
 
 class DB:
@@ -8,9 +10,31 @@ class DB:
 
 
 class RequestHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(HTTPStatus.OK, "Server working")
+    def set_headers(self, status, json = True):
+        self.send_response(status)
+        if json:
+            self.send_header("Content-Type", "application/json")
         self.end_headers()
+
+    def do_GET(self):
+        if "/users" == self.path:
+            self.set_headers(HTTPStatus.OK)
+
+            data = json.dumps(DB.users).encode("utf-8")
+            self.wfile.write(data)
+        elif (
+            "/login" == self.path and "user" in self.headers and "pass" in self.headers
+        ):
+            user = self.headers["user"]
+            if user in DB.users and DB.users[user] == self.headers["pass"]:
+                self.set_headers(HTTPStatus.OK)
+
+                send_token = {"token": "abcdefgh"}
+                self.wfile.write(json.dumps(send_token).encode("utf-8"))
+            else:
+                self.set_headers(HTTPStatus.NOT_FOUND)
+        else:
+            self.set_headers(HTTPStatus.BAD_REQUEST, False)
 
 
 if __name__ == "__main__":
