@@ -11,7 +11,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     server = HTTPServer((argv[1], int(argv[2])), RequestHandler)
-    if len(argv) != 3 or not argv[2].isnumeric():
+    if len(argv) < 3 or not argv[2].isnumeric():
         print("WRONG USAGE!")
         print("server.py [ip] [port]")
     else:
