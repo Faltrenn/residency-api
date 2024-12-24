@@ -48,36 +48,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             else:
                 self.set_headers(HTTPStatus.UNAUTHORIZED)
 
-    @route("/user")
-    def user(self):
-        if "token" in self.headers:
-            token = self.headers["token"]
-            if token in DB.logins and DB.logins[token][1] == "admin":
-                self.set_headers(HTTPStatus.OK)
-
-                data = json.dumps(DB.users).encode("utf-8")
-                self.wfile.write(data)
-            else:
-                self.set_headers(HTTPStatus.BAD_REQUEST)
-
-    def do_GET(self):
-        for k, v in RequestHandler.routes.items():
-            if self.path == k:
-                v(self)
-                return
-        return
-        if "/users" == self.path and "token" in self.headers:
-            token = self.headers["token"]
-            if token in DB.logins and DB.logins[token][1] == "admin":
-                self.set_headers(HTTPStatus.OK)
-
-                data = json.dumps(DB.users).encode("utf-8")
-                self.wfile.write(data)
-            else:
-                self.set_headers(HTTPStatus.UNAUTHORIZED)
-        elif (
-            "/login" == self.path and "user" in self.headers and "pass" in self.headers
-        ):
+    @route("/login")
+    def login(self):
+        if "user" in self.headers and "pass" in self.headers:
             user = self.headers["user"]
             if user in DB.users and DB.users[user][0] == self.headers["pass"]:
                 self.set_headers(HTTPStatus.OK)
@@ -99,7 +72,12 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps(send_token).encode("utf-8"))
             else:
                 self.set_headers(HTTPStatus.NOT_FOUND)
-        else:
+
+    def do_GET(self):
+        for k, v in RequestHandler.routes.items():
+            if self.path == k:
+                v(self)
+                return
             self.set_headers(HTTPStatus.BAD_REQUEST, False)
 
 
@@ -108,7 +86,7 @@ if __name__ == "__main__":
     server = HTTPServer((argv[1], int(argv[2])), RequestHandler)
     if len(argv) < 3 or not argv[2].isnumeric():
         print("WRONG USAGE!")
-        print("server.py [ip] [port]")
+        print("server.py ip port")
     else:
         print(f"Server started at {argv[1]}:{argv[2]}")
         try:
