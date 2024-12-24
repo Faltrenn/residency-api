@@ -34,7 +34,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             }
             cls.routes[m] = routes
 
-    def set_headers(self, status, message="", json=True):
+    def set_headers(self, status: HTTPStatus, message:str | None = None, json=True):
         self.send_response(status, message)
         if json:
             self.send_header("Content-Type", "application/json")
