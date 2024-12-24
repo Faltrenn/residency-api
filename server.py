@@ -6,19 +6,66 @@ import random
 import string
 
 
+def route(path: str):
+    def decorator(func):
+        func.__name__ = path
+        return func
+
+    return decorator
+
+
 class DB:
     users = {"manel": ("password", "admin"), "manelzaum": ("password", "resident")}
     logins = {}
 
 
 class RequestHandler(BaseHTTPRequestHandler):
+    routes = {}
+
+    @classmethod
+    def initialize(cls):
+        cls.routes = {
+            f.__name__: f
+            for f in RequestHandler.__dict__.values()
+            if callable(f) and f.__name__.startswith("/")
+        }
+
     def set_headers(self, status, json=True):
         self.send_response(status)
         if json:
             self.send_header("Content-Type", "application/json")
         self.end_headers()
 
+    @route("/users")
+    def users(self):
+        if "token" in self.headers:
+            token = self.headers["token"]
+            if token in DB.logins and DB.logins[token][1] == "admin":
+                self.set_headers(HTTPStatus.OK)
+
+                data = json.dumps(DB.users).encode("utf-8")
+                self.wfile.write(data)
+            else:
+                self.set_headers(HTTPStatus.UNAUTHORIZED)
+
+    @route("/user")
+    def user(self):
+        if "token" in self.headers:
+            token = self.headers["token"]
+            if token in DB.logins and DB.logins[token][1] == "admin":
+                self.set_headers(HTTPStatus.OK)
+
+                data = json.dumps(DB.users).encode("utf-8")
+                self.wfile.write(data)
+            else:
+                self.set_headers(HTTPStatus.BAD_REQUEST)
+
     def do_GET(self):
+        for k, v in RequestHandler.routes.items():
+            if self.path == k:
+                v(self)
+                return
+        return
         if "/users" == self.path and "token" in self.headers:
             token = self.headers["token"]
             if token in DB.logins and DB.logins[token][1] == "admin":
@@ -57,6 +104,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    RequestHandler.initialize()
     server = HTTPServer((argv[1], int(argv[2])), RequestHandler)
     if len(argv) < 3 or not argv[2].isnumeric():
         print("WRONG USAGE!")
