@@ -1,14 +1,14 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from http import HTTPStatus
+from http import HTTPMethod, HTTPStatus
 from sys import argv
 import json
 import random
 import string
 
 
-def route(path: str):
+def route(path: str, method: HTTPMethod):
     def decorator(func):
-        func.__name__ = path
+        setattr(func, "api", (path, method))
         return func
 
     return decorator
@@ -24,19 +24,22 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     @classmethod
     def initialize(cls):
-        cls.routes = {
-            f.__name__: f
-            for f in RequestHandler.__dict__.values()
-            if callable(f) and f.__name__.startswith("/")
-        }
+        methods = (HTTPMethod.GET, HTTPMethod.POST, HTTPMethod.PUT, HTTPMethod.DELETE)
+        for m in methods:
+            routes = {
+                attr[0]: f
+                for f in RequestHandler.__dict__.values()
+                if (attr := getattr(f, "api", None)) is not None and attr[1] == m
+            }
+            cls.routes[m] = routes
 
-    def set_headers(self, status, json=True):
-        self.send_response(status)
+    def set_headers(self, status, message="", json=True):
+        self.send_response(status, message)
         if json:
             self.send_header("Content-Type", "application/json")
         self.end_headers()
 
-    @route("/users")
+    @route("/users", HTTPMethod.GET)
     def users(self):
         if "token" in self.headers:
             token = self.headers["token"]
@@ -48,7 +51,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             else:
                 self.set_headers(HTTPStatus.UNAUTHORIZED)
 
-    @route("/login")
+    @route("/login", HTTPMethod.GET)
     def login(self):
         if "user" in self.headers and "pass" in self.headers:
             user = self.headers["user"]
@@ -73,12 +76,29 @@ class RequestHandler(BaseHTTPRequestHandler):
             else:
                 self.set_headers(HTTPStatus.NOT_FOUND)
 
-    def do_GET(self):
-        for k, v in RequestHandler.routes.items():
+    @route("/test-post", HTTPMethod.POST)
+    def test_post(self):
+        self.set_headers(HTTPStatus.OK, "Funcionou :)", False)
+        self.wfile.write("Tudo joia meu parceiro".encode("utf-8"))
+
+    def run_routes(self, method: HTTPMethod):
+        for k, v in RequestHandler.routes[method].items():
             if self.path == k:
                 v(self)
                 return
-            self.set_headers(HTTPStatus.BAD_REQUEST, False)
+            self.set_headers(HTTPStatus.NOT_FOUND, json=False)
+
+    def do_GET(self):
+        self.run_routes(HTTPMethod.GET)
+
+    def do_POST(self):
+        self.run_routes(HTTPMethod.POST)
+
+    def do_PUT(self):
+        self.run_routes(HTTPMethod.PUT)
+
+    def do_DELETE(self):
+        self.run_routes(HTTPMethod.DELETE)
 
 
 if __name__ == "__main__":
