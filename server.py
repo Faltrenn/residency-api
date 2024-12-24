@@ -4,6 +4,7 @@ from sys import argv
 import json
 import random
 import string
+import re
 
 
 def route(path: str, method: HTTPMethod):
@@ -76,14 +77,14 @@ class RequestHandler(BaseHTTPRequestHandler):
             else:
                 self.set_headers(HTTPStatus.NOT_FOUND)
 
-    @route("/test-post", HTTPMethod.POST)
+    @route("/test-post*", HTTPMethod.POST)
     def test_post(self):
         self.set_headers(HTTPStatus.OK, "Funcionou :)", False)
         self.wfile.write("Tudo joia meu parceiro".encode("utf-8"))
 
     def run_routes(self, method: HTTPMethod):
         for k, v in RequestHandler.routes[method].items():
-            if self.path == k:
+            if re.search(k, self.path):
                 v(self)
                 return
             self.set_headers(HTTPStatus.NOT_FOUND, json=False)
