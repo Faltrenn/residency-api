@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS db_residency;
+CREATE DATABASE IF NOT EXISTS residency;
 
-USE db_residency;
+USE residency;
 
 CREATE TABLE IF NOT EXISTS roles (title VARCHAR(30), PRIMARY KEY (title));
 
