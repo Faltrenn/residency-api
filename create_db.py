@@ -18,12 +18,14 @@ with open("create_db.sql") as arq:
         )
         cur = conn.cursor()
         commands = [
-            cmd.replace("\n", "")
-            for cmd in arq.read().split(";")
-            if cmd.strip()
+            cmd.replace("\n", "") for cmd in arq.read().split(";") if cmd.strip()
         ]
         for command in commands:
             if command:
-                cur.execute(command)
+                try:
+                    cur.execute(command)
+                except Exception as e:
+                    print(command)
+                    print("Error:", e)
         conn.commit()
         conn.close()
