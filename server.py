@@ -110,6 +110,15 @@ class RequestHandler(BaseHTTPRequestHandler):
         else:
             self.set_headers(HTTPStatus.BAD_REQUEST)
 
+    @route("/users", HTTPMethod.DELETE)
+    def remove_user(self):
+        if "id" in self.headers:
+            self.set_headers(HTTPStatus.OK)
+            cur.execute("DELETE FROM users WHERE (id = ?)", (self.headers["id"],))
+            conn.commit()
+        else:
+            self.set_headers(HTTPStatus.BAD_REQUEST)
+
     @route("/login", HTTPMethod.GET)
     def login(self):
         if "user" in self.headers and "pass" in self.headers:
