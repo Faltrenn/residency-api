@@ -5,6 +5,28 @@ import json
 import random
 import string
 import re
+from typing import List
+import mariadb
+
+
+conn = mariadb.connect(
+    host="127.0.0.1", port=3306, user="root", password="password", database="residency"
+)
+cur = conn.cursor()
+
+
+def fetch_users() -> List[dict]:
+    cur.execute("select * from users")
+    return [
+        {
+            "id": id,
+            "name": name,
+            "password": password,
+            "role": role,
+            "institution": institution,
+        }
+        for (id, name, password, role, institution) in cur.fetchall()
+    ]
 
 
 def route(path: str, method: HTTPMethod):
@@ -49,16 +71,44 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     @route("/users", HTTPMethod.GET)
-    def users(self):
-        if "token" in self.headers:
-            token = self.headers["token"]
-            if token in DB.logins and DB.logins[token][1] == "admin":
-                self.set_headers(HTTPStatus.OK)
+    def get_users(self):
+        self.set_headers(HTTPStatus.OK)
+        users = fetch_users()
 
-                data = json.dumps(DB.users).encode("utf-8")
-                self.wfile.write(data)
-            else:
-                self.set_headers(HTTPStatus.UNAUTHORIZED)
+        data = json.dumps(users).encode("utf-8")
+        self.wfile.write(data)
+
+        # if "token" in self.headers:
+        #     token = self.headers["token"]
+        #     if token in DB.logins and DB.logins[token][1] == "admin":
+        #         self.set_headers(HTTPStatus.OK)
+        #
+        #         data = json.dumps(DB.users).encode("utf-8")
+        #         self.wfile.write(data)
+        #     else:
+        #         self.set_headers(HTTPStatus.UNAUTHORIZED)
+
+    @route("/users", HTTPMethod.POST)
+    def add_user(self):
+        if (
+            "name" in self.headers
+            and "role" in self.headers
+            and "pass" in self.headers
+            and "institution" in self.headers
+        ):
+            self.set_headers(HTTPStatus.OK)
+            cur.execute(
+                "INSERT INTO users (name, pass, role_title, institution_short_name) VALUES (?, ?, ?, ?)",
+                (
+                    self.headers["name"],
+                    self.headers["pass"],
+                    self.headers["role"],
+                    self.headers["institution"],
+                ),
+            )
+            conn.commit()
+        else:
+            self.set_headers(HTTPStatus.BAD_REQUEST)
 
     @route("/login", HTTPMethod.GET)
     def login(self):
