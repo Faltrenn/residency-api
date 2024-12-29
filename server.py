@@ -16,7 +16,10 @@ def route(path: str, method: HTTPMethod):
 
 
 class DB:
-    users = {"manel": ("password", "admin"), "manelzaum": ("password", "resident")}
+    users = {
+        "manel": ("password", "admin"),
+        "manelzaum": ("password", "resident"),
+    }
     logins = {}
 
 
@@ -25,7 +28,12 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     @classmethod
     def initialize(cls):
-        methods = (HTTPMethod.GET, HTTPMethod.POST, HTTPMethod.PUT, HTTPMethod.DELETE)
+        methods = (
+            HTTPMethod.GET,
+            HTTPMethod.POST,
+            HTTPMethod.PUT,
+            HTTPMethod.DELETE,
+        )
         for m in methods:
             routes = {
                 attr[0]: f
@@ -103,12 +111,12 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    RequestHandler.initialize()
-    server = HTTPServer((argv[1], int(argv[2])), RequestHandler)
     if len(argv) < 3 or not argv[2].isnumeric():
         print("WRONG USAGE!")
         print("server.py ip port")
     else:
+        RequestHandler.initialize()
+        server = HTTPServer((argv[1], int(argv[2])), RequestHandler)
         print(f"Server started at {argv[1]}:{argv[2]}")
         try:
             server.serve_forever()
