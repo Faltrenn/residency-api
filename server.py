@@ -110,8 +110,32 @@ class RequestHandler(BaseHTTPRequestHandler):
         else:
             self.set_headers(HTTPStatus.BAD_REQUEST)
 
-    @route("/users", HTTPMethod.DELETE)
+    @route("/users", HTTPMethod.PUT)
     def remove_user(self):
+        if (
+            "id" in self.headers
+            and "name" in self.headers
+            and "role" in self.headers
+            and "pass" in self.headers
+            and "institution" in self.headers
+        ):
+            self.set_headers(HTTPStatus.OK)
+            cur.execute(
+                "UPDATE users SET name = ?, pass = ?, role_title = ?, institution_short_name = ? WHERE (id = ?)",
+                (
+                    self.headers["name"],
+                    self.headers["pass"],
+                    self.headers["role"],
+                    self.headers["institution"],
+                    self.headers["id"],
+                ),
+            )
+            conn.commit()
+        else:
+            self.set_headers(HTTPStatus.BAD_REQUEST)
+
+    @route("/users", HTTPMethod.DELETE)
+    def update_user(self):
         if "id" in self.headers:
             self.set_headers(HTTPStatus.OK)
             cur.execute("DELETE FROM users WHERE (id = ?)", (self.headers["id"],))
