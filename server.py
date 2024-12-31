@@ -66,6 +66,11 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def set_headers(self, status: HTTPStatus, message: str | None = None, json=True):
         self.send_response(status, message)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header(
+            "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
+        )
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
         if json:
             self.send_header("Content-Type", "application/json")
         self.end_headers()
@@ -143,8 +148,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         else:
             self.set_headers(HTTPStatus.BAD_REQUEST)
 
-    @route("/login", HTTPMethod.GET)
+    @route("/login", HTTPMethod.POST)
     def login(self):
+        print(self.rfile.read())
         if "user" in self.headers and "pass" in self.headers:
             user = self.headers["user"]
             if user in DB.users and DB.users[user][0] == self.headers["pass"]:
@@ -167,6 +173,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps(send_token).encode("utf-8"))
             else:
                 self.set_headers(HTTPStatus.NOT_FOUND)
+                self.wfile.write(
+                    json.dumps({"error": "Invalid credentials"}).encode("utf-8")
+                )
+        else:
+            self.set_headers(HTTPStatus.BAD_REQUEST)
 
     @route("/test-post*", HTTPMethod.POST)
     def test_post(self):
@@ -179,6 +190,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                 v(self)
                 return
         self.set_headers(HTTPStatus.NOT_FOUND, json=False)
+
+    def do_OPTIONS(self):
+        self.set_headers(HTTPStatus.NO_CONTENT, json=False)
 
     def do_GET(self):
         self.run_routes(HTTPMethod.GET)
