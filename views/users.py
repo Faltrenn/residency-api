@@ -21,6 +21,7 @@ def fetch_users(cur) -> List[dict]:
 
 @route("/users", HTTPMethod.GET)
 def get_users(rh: RequestHandler, cur):
+    print(rh.headers)
     rh.set_headers(HTTPStatus.OK)
     users = fetch_users(cur)
 
@@ -51,7 +52,7 @@ def add_user(rh, cur, conn):
         rh.set_headers(HTTPStatus.BAD_REQUEST)
 
 
-@route("/users", HTTPMethod.PUT)
+@route("/users", HTTPMethod.DELETE)
 def remove_user(rh, cur, conn):
     if (
         "id" in rh.headers
@@ -76,7 +77,7 @@ def remove_user(rh, cur, conn):
         rh.set_headers(HTTPStatus.BAD_REQUEST)
 
 
-@route("/users", HTTPMethod.DELETE)
+@route("/users", HTTPMethod.PUT)
 def update_user(rh, cur, conn):
     if "id" in rh.headers:
         rh.set_headers(HTTPStatus.OK)

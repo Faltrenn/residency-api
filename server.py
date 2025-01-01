@@ -3,6 +3,8 @@ from http import HTTPMethod, HTTPStatus
 from sys import argv
 import re
 import mariadb
+import views
+import importlib
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -13,7 +15,11 @@ class RequestHandler(BaseHTTPRequestHandler):
     @classmethod
     def initialize(cls):
         cls.conn = mariadb.connect(
-            host="127.0.0.1", port=3306, user="root", password="password", database="residency"
+            host="127.0.0.1",
+            port=3306,
+            user="root",
+            password="password",
+            database="residency",
         )
         cls.cur = cls.conn.cursor()
 
@@ -23,13 +29,23 @@ class RequestHandler(BaseHTTPRequestHandler):
             HTTPMethod.PUT,
             HTTPMethod.DELETE,
         )
+
+        modules_names = [name for name in dir(views) if not name.startswith("__")]
+        functions = [
+            f
+            for module_name in modules_names
+            for f in importlib.import_module(
+                f"views.{module_name}"
+            ).__dict__.values()
+            if hasattr(f, "api")
+        ]
+
         for m in methods:
-            routes = {
+            cls.routes[m] = {
                 attr[0]: f
-                for f in RequestHandler.__dict__.values()
-                if (attr := getattr(f, "api", None)) is not None and attr[1] == m
+                for f in functions
+                if (attr := getattr(f, "api")) and attr[1] == m
             }
-            cls.routes[m] = routes
 
     def set_headers(self, status: HTTPStatus, message: str | None = None, json=True):
         self.send_response(status, message)
