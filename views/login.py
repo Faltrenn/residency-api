@@ -4,42 +4,39 @@ import string
 import json
 import random
 
+from server import RequestHandler
+from services.auth import auth_user
 
-class DB:
-    users = {
-        "manel": ("password", "admin"),
-        "manelzaum": ("password", "resident"),
-    }
-    logins = {}
+
+logins = {}  # {user_id: token}
 
 
 @route("/login", HTTPMethod.POST)
-def login(self):
-    print(self.rfile.read())
-    if "user" in self.headers and "pass" in self.headers:
-        user = self.headers["user"]
-        if user in DB.users and DB.users[user][0] == self.headers["pass"]:
-            self.set_headers(HTTPStatus.OK)
-            for k, v in DB.logins.items():
-                if user in v:
-                    send_token = {"token": k}
-                    self.wfile.write(json.dumps(send_token).encode("utf-8"))
-                    return
+def login(rh: RequestHandler):
+    if "user" in rh.headers and "pass" in rh.headers:
+        user = auth_user(rh.headers["user"], rh.headers["pass"])
+        if user:
+            rh.set_headers(HTTPStatus.OK)
+            user_id = user["id"]
+            if user_id in logins:
+                send_token = {"token": logins[user_id]}
+                rh.wfile.write(json.dumps(send_token).encode("utf-8"))
+                return
 
-                token = "".join(
-                    random.choices(
-                        string.ascii_letters + string.digits,
-                        k=5,
-                    )
+            token = "".join(
+                random.choices(
+                    string.ascii_letters + string.digits,
+                    k=5,
                 )
-                DB.logins[token] = [user, DB.users[user][1]]
+            )
+            logins[user_id] = token
 
-                send_token = {"token": token}
-                self.wfile.write(json.dumps(send_token).encode("utf-8"))
-            else:
-                self.set_headers(HTTPStatus.NOT_FOUND)
-                self.wfile.write(
-                    json.dumps({"error": "Invalid credentials"}).encode("utf-8")
-                )
+            send_token = {"token": token}
+            rh.wfile.write(json.dumps(send_token).encode("utf-8"))
         else:
-            self.set_headers(HTTPStatus.BAD_REQUEST)
+            rh.set_headers(HTTPStatus.NOT_FOUND)
+            rh.wfile.write(
+                json.dumps({"error": "Invalid credentials"}).encode("utf-8")
+            )
+    else:
+        rh.set_headers(HTTPStatus.BAD_REQUEST)
