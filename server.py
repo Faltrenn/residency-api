@@ -3,8 +3,8 @@ from http import HTTPMethod, HTTPStatus
 from sys import argv
 import re
 import mariadb
-import views
 import importlib
+import views
 
 
 class RequestHandler(BaseHTTPRequestHandler):
