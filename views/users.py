@@ -4,28 +4,25 @@ from server import RequestHandler
 from typing import List
 import json
 import database as db
+import models
 
 
-def fetch_users(cur) -> List[dict]:
+def fetch_users() -> List[dict]:
+    conn = db.get_connection()
+    cur = conn.cursor()
     cur.execute("select * from users")
-    return [
-        {
-            "id": id,
-            "name": name,
-            "password": password,
-            "role": role,
-            "institution": institution,
-        }
-        for (id, name, password, role, institution) in cur.fetchall()
-    ]
+    rows = cur.fetchall()
+    users = models.get_users(rows)
+
+    conn.close()
+    cur.close()
+    return users
 
 
 @route("/users", HTTPMethod.GET)
 def get_users(rh: RequestHandler):
-    print(rh.headers)
     rh.set_headers(HTTPStatus.OK)
-    cur = db.get_connection().cursor()
-    users = fetch_users(cur)
+    users = fetch_users()
 
     data = json.dumps(users).encode("utf-8")
     rh.wfile.write(data)
@@ -83,7 +80,9 @@ def remove_user(rh):
 def update_user(rh):
     if "id" in rh.headers:
         rh.set_headers(HTTPStatus.OK)
-        RequestHandler.cur.execute("DELETE FROM users WHERE (id = ?)", (rh.headers["id"],))
+        RequestHandler.cur.execute(
+            "DELETE FROM users WHERE (id = ?)", (rh.headers["id"],)
+        )
         RequestHandler.conn.commit()
     else:
         rh.set_headers(HTTPStatus.BAD_REQUEST)
