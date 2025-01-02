@@ -2,9 +2,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from http import HTTPMethod, HTTPStatus
 from sys import argv
 import re
-import mariadb
 import importlib
-import views
+import routes
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -19,7 +18,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             HTTPMethod.DELETE,
         )
 
-        modules_names = [name for name in dir(views) if not name.startswith("__")]
+        modules_names = [name for name in dir(routes) if not name.startswith("__")]
         functions = [
             f
             for module_name in modules_names
