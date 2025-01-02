@@ -9,20 +9,9 @@ import views
 
 class RequestHandler(BaseHTTPRequestHandler):
     routes = {}
-    cur: mariadb.Cursor
-    conn: mariadb.Connection
 
     @classmethod
     def initialize(cls):
-        cls.conn = mariadb.connect(
-            host="127.0.0.1",
-            port=3306,
-            user="root",
-            password="password",
-            database="residency",
-        )
-        cls.cur = cls.conn.cursor()
-
         methods = (
             HTTPMethod.GET,
             HTTPMethod.POST,

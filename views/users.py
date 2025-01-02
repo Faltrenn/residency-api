@@ -37,7 +37,9 @@ def add_user(rh):
         and "institution" in rh.headers
     ):
         rh.set_headers(HTTPStatus.OK)
-        RequestHandler.cur.execute(
+        conn = db.get_connection()
+        cur = conn.cursor()
+        cur.execute(
             "INSERT INTO users (name, pass, role_title, institution_short_name) VALUES (?, ?, ?, ?)",
             (
                 rh.headers["name"],
@@ -46,7 +48,9 @@ def add_user(rh):
                 rh.headers["institution"],
             ),
         )
-        RequestHandler.conn.commit()
+        conn.commit()
+        cur.close()
+        conn.close()
     else:
         rh.set_headers(HTTPStatus.BAD_REQUEST)
 
@@ -61,7 +65,9 @@ def remove_user(rh):
         and "institution" in rh.headers
     ):
         rh.set_headers(HTTPStatus.OK)
-        RequestHandler.cur.execute(
+        conn = db.get_connection()
+        cur = conn.cursor()
+        cur.execute(
             "UPDATE users SET name = ?, pass = ?, role_title = ?, institution_short_name = ? WHERE (id = ?)",
             (
                 rh.headers["name"],
@@ -71,7 +77,9 @@ def remove_user(rh):
                 rh.headers["id"],
             ),
         )
-        RequestHandler.conn.commit()
+        conn.commit()
+        cur.close()
+        conn.close()
     else:
         rh.set_headers(HTTPStatus.BAD_REQUEST)
 
@@ -80,9 +88,13 @@ def remove_user(rh):
 def update_user(rh):
     if "id" in rh.headers:
         rh.set_headers(HTTPStatus.OK)
-        RequestHandler.cur.execute(
+        conn = db.get_connection()
+        cur = conn.cursor()
+        cur.execute(
             "DELETE FROM users WHERE (id = ?)", (rh.headers["id"],)
         )
-        RequestHandler.conn.commit()
+        conn.commit()
+        cur.close()
+        conn.close()
     else:
         rh.set_headers(HTTPStatus.BAD_REQUEST)
