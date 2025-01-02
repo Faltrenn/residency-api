@@ -22,15 +22,17 @@ class RequestHandler(BaseHTTPRequestHandler):
         functions = [
             f
             for module_name in modules_names
-            for f in importlib.import_module(f"views.{module_name}").__dict__.values()
+            for f in importlib.import_module(f"routes.{module_name}").__dict__.values()
             if hasattr(f, "api")
         ]
 
         cls.routes = {
-            m: {attr[0]: f}
+            m: {
+                attr[0]: f
+                for f in functions
+                if (attr := getattr(f, "api")) and attr[1] == m
+            }
             for m in methods
-            for f in functions
-            if (attr := getattr(f, "api")) and attr[1] == m
         }
 
     def set_headers(self, status: HTTPStatus, message: str | None = None, json=True):

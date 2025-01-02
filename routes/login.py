@@ -13,6 +13,8 @@ logins = {}  # {user_id: token}
 
 @route("/login", HTTPMethod.POST)
 def login(rh: RequestHandler):
+    print("Boa")
+    print(json.loads(rh.rfile.read()))
     if "user" in rh.headers and "pass" in rh.headers:
         user = auth_user(rh.headers["user"], rh.headers["pass"])
         if user:
