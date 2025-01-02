@@ -13,32 +13,43 @@ logins = {}  # {user_id: token}
 
 @route("/login", HTTPMethod.POST)
 def login(rh: RequestHandler):
-    print("Boa")
-    print(json.loads(rh.rfile.read()))
-    if "user" in rh.headers and "pass" in rh.headers:
-        user = auth_user(rh.headers["user"], rh.headers["pass"])
+    try:
+        content_length = int(rh.headers.get("Content-Length", 0))
+        body_data = rh.rfile.read(content_length).decode("utf-8")
+        body = json.loads(body_data)
+
+        if not isinstance(body, dict) or "user" not in body or "pass" not in body:
+            raise ValueError("Invalid body")
+
+        user = auth_user(body["user"], body["pass"])
         if user:
-            rh.set_headers(HTTPStatus.OK)
             user_id = user["id"]
             if user_id in logins:
-                send_token = {"token": logins[user_id]}
-                rh.wfile.write(json.dumps(send_token).encode("utf-8"))
-                return
-
-            token = "".join(
-                random.choices(
-                    string.ascii_letters + string.digits,
-                    k=5,
+                token = logins[user_id]
+            else:
+                token = "".join(
+                    random.choices(
+                        string.ascii_letters + string.digits,
+                        k=5,
+                    )
                 )
-            )
-            logins[user_id] = token
+                logins[user_id] = token
 
-            send_token = {"token": token}
-            rh.wfile.write(json.dumps(send_token).encode("utf-8"))
+            response = {"token": token}
+            rh.set_headers(HTTPStatus.OK)
+            rh.wfile.write(json.dumps(response).encode("utf-8"))
         else:
             rh.set_headers(HTTPStatus.NOT_FOUND)
             rh.wfile.write(
                 json.dumps({"error": "Invalid credentials"}).encode("utf-8")
             )
-    else:
+    except ValueError as ve:
         rh.set_headers(HTTPStatus.BAD_REQUEST)
+        rh.wfile.write(json.dumps({"error": str(ve)}).encode("utf-8"))
+    except BrokenPipeError:
+        print("Client disconnected before get response.")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        rh.set_headers(HTTPStatus.INTERNAL_SERVER_ERROR)
+        rh.wfile.write(json.dumps({"error": "Internal server error"}).encode("utf-8"))
+
