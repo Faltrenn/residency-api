@@ -35,7 +35,7 @@ def login(rh: RequestHandler):
                 )
                 logins[user_id] = token
 
-            response = {"token": token}
+            response = {"token": token, "role": user["role"]}
             rh.set_headers(HTTPStatus.OK)
             rh.wfile.write(json.dumps(response).encode("utf-8"))
         else:
