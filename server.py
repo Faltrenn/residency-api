@@ -41,7 +41,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header(
             "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
         )
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "token, Content-Type")
         if json:
             self.send_header("Content-Type", "application/json")
         self.end_headers()
