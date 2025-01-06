@@ -40,9 +40,7 @@ def login(rh: RequestHandler):
             rh.wfile.write(json.dumps(response).encode("utf-8"))
         else:
             rh.set_headers(HTTPStatus.NOT_FOUND)
-            rh.wfile.write(
-                json.dumps({"error": "Invalid credentials"}).encode("utf-8")
-            )
+            rh.wfile.write(json.dumps({"error": "Invalid credentials"}).encode("utf-8"))
     except ValueError as ve:
         rh.set_headers(HTTPStatus.BAD_REQUEST)
         rh.wfile.write(json.dumps({"error": str(ve)}).encode("utf-8"))
@@ -53,3 +51,19 @@ def login(rh: RequestHandler):
         rh.set_headers(HTTPStatus.INTERNAL_SERVER_ERROR)
         rh.wfile.write(json.dumps({"error": "Internal server error"}).encode("utf-8"))
 
+
+@route("/login/check", HTTPMethod.GET)
+def check(rh: RequestHandler):
+    if not "token" in rh.headers:
+        rh.set_headers(HTTPStatus.BAD_REQUEST, json=False)
+        return
+
+    if not rh.headers["token"] in logins.values():
+        rh.set_headers(HTTPStatus.UNAUTHORIZED)
+        rh.wfile.write(
+            json.dumps({"error": "Token is inactive or expired"}).encode("utf-8")
+        )
+        return
+
+    rh.set_headers(HTTPStatus.OK)
+    rh.wfile.write(json.dumps({"message": "Token is valid"}).encode("utf-8"))
