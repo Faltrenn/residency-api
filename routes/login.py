@@ -5,7 +5,7 @@ import json
 import random
 
 from server import RequestHandler
-from services.auth import auth_user
+from services.auth import auth_user, get_user
 
 
 logins = {}  # {user_id: token}
@@ -65,5 +65,12 @@ def check(rh: RequestHandler):
         )
         return
 
+    response = {}
+    for k, v in logins.items():
+        if v == rh.headers["token"]:
+            if user := get_user(k):
+                response["role"] = user["role"]
+                break
+
     rh.set_headers(HTTPStatus.OK)
-    rh.wfile.write(json.dumps({"message": "Token is valid"}).encode("utf-8"))
+    rh.wfile.write(json.dumps(response).encode("utf-8"))

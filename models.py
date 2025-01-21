@@ -1,4 +1,4 @@
-def get_user(row) -> dict:
+def get_user(row: list) -> dict:
     return (
         {
             "id": row[0],
@@ -12,7 +12,7 @@ def get_user(row) -> dict:
     )
 
 
-def get_users(rows) -> list[dict]:
+def get_users(rows: list) -> list[dict]:
     return (
         [get_user(row) for row in rows]
         if rows
