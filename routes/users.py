@@ -1,5 +1,6 @@
 from common import route
 from http import HTTPMethod, HTTPStatus
+from routes.login import getRoleByToken
 from server import RequestHandler
 from typing import List
 import json
@@ -21,6 +22,15 @@ def fetch_users() -> List[dict]:
 
 @route("/users", HTTPMethod.GET)
 def get_users(rh: RequestHandler):
+    if "token" not in rh.headers:
+        rh.set_headers(HTTPStatus.BAD_REQUEST)
+        return
+
+    role = getRoleByToken(rh.headers["token"])
+    if not role or role != "Admin":
+        rh.set_headers(HTTPStatus.UNAUTHORIZED)
+        return
+
     rh.set_headers(HTTPStatus.OK)
     users = fetch_users()
 

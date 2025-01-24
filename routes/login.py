@@ -52,6 +52,14 @@ def login(rh: RequestHandler):
         rh.wfile.write(json.dumps({"error": "Internal server error"}).encode("utf-8"))
 
 
+def getRoleByToken(token: str) -> str | None:
+    for k, v in logins.items():
+        if v == token:
+            if user := get_user(k):
+                return user["role"]
+    return None
+
+
 @route("/login/check", HTTPMethod.GET)
 def check(rh: RequestHandler):
     if not "token" in rh.headers:
@@ -66,11 +74,8 @@ def check(rh: RequestHandler):
         return
 
     response = {}
-    for k, v in logins.items():
-        if v == rh.headers["token"]:
-            if user := get_user(k):
-                response["role"] = user["role"]
-                break
+    if role := getRoleByToken(rh.headers["token"]):
+        response["role"] = role
 
     rh.set_headers(HTTPStatus.OK)
     rh.wfile.write(json.dumps(response).encode("utf-8"))
