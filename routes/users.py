@@ -1,4 +1,3 @@
-import mariadb
 from common import route
 from http import HTTPMethod, HTTPStatus
 from routes.login import getRoleByToken

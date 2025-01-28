@@ -12,6 +12,7 @@ def auth_user(username: str, password: str) -> dict | None:
     cur.close()
     return user
 
+
 def get_user(id: int) -> dict | None:
     conn = db.get_connection()
     cur = conn.cursor()
