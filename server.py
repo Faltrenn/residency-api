@@ -1,5 +1,6 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from http import HTTPMethod, HTTPStatus
+import json
 from sys import argv
 import re
 import importlib
@@ -49,8 +50,18 @@ class RequestHandler(BaseHTTPRequestHandler):
     def run_routes(self, method: HTTPMethod):
         for k, v in RequestHandler.routes[method].items():
             if re.search(k, self.path):
-                v(self)
-                return
+                try:
+                    v(self)
+                    return
+                except ValueError as ve:
+                    self.set_headers(HTTPStatus.BAD_REQUEST)
+                    self.wfile.write(json.dumps({"error": str(ve)}).encode("utf-8"))
+                except BrokenPipeError:
+                    print("Client disconnected before get response.")
+                except Exception as e:
+                    print(f"Unexpected error: {e}")
+                    self.set_headers(HTTPStatus.INTERNAL_SERVER_ERROR)
+                    self.wfile.write(json.dumps({"error": "Internal server error"}).encode("utf-8"))
         self.set_headers(HTTPStatus.NOT_FOUND, json=False)
 
     def do_OPTIONS(self):

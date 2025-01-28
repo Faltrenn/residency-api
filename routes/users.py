@@ -1,3 +1,4 @@
+import mariadb
 from common import route
 from http import HTTPMethod, HTTPStatus
 from routes.login import getRoleByToken
@@ -6,9 +7,22 @@ from typing import List
 import json
 import database as db
 import models
+from utils import get_body
 
 
 def fetch_users() -> List[dict]:
+    conn = db.get_connection()
+    cur = conn.cursor()
+    cur.execute("select * from users")
+    rows = cur.fetchall()
+    users = models.get_users(rows)
+
+    conn.close()
+    cur.close()
+    return users
+
+
+def remove_user() -> List[dict]:
     conn = db.get_connection()
     cur = conn.cursor()
     cur.execute("select * from users")
@@ -39,72 +53,71 @@ def get_users(rh: RequestHandler):
 
 
 @route("/users", HTTPMethod.POST)
-def add_user(rh):
-    if (
-        "name" in rh.headers
-        and "role" in rh.headers
-        and "pass" in rh.headers
-        and "institution" in rh.headers
+def add_user(rh: RequestHandler):
+    body = get_body(rh)
+
+    if not (
+        "name" in body and "role" in body and "pass" in body and "institution" in body
     ):
-        rh.set_headers(HTTPStatus.OK)
-        conn = db.get_connection()
-        cur = conn.cursor()
-        cur.execute(
-            "INSERT INTO users (name, pass, role_title, institution_short_name) VALUES (?, ?, ?, ?)",
-            (
-                rh.headers["name"],
-                rh.headers["pass"],
-                rh.headers["role"],
-                rh.headers["institution"],
-            ),
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
-    else:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
+        raise ValueError("Invalid body")
+
+    rh.set_headers(HTTPStatus.OK)
+    conn = db.get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO users (name, pass, role_title, institution_short_name) VALUES (?, ?, ?, ?)",
+        (
+            body["name"],
+            body["pass"],
+            body["role"],
+            body["institution"],
+        ),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
 
 
-@route("/users", HTTPMethod.DELETE)
-def remove_user(rh):
-    if (
+@route("/users", HTTPMethod.PUT)
+def update_user(rh: RequestHandler):
+    if not (
         "id" in rh.headers
         and "name" in rh.headers
         and "role" in rh.headers
         and "pass" in rh.headers
         and "institution" in rh.headers
     ):
-        rh.set_headers(HTTPStatus.OK)
-        conn = db.get_connection()
-        cur = conn.cursor()
-        cur.execute(
-            "UPDATE users SET name = ?, pass = ?, role_title = ?, institution_short_name = ? WHERE (id = ?)",
-            (
-                rh.headers["name"],
-                rh.headers["pass"],
-                rh.headers["role"],
-                rh.headers["institution"],
-                rh.headers["id"],
-            ),
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
-    else:
         rh.set_headers(HTTPStatus.BAD_REQUEST)
+        return
+
+    rh.set_headers(HTTPStatus.OK)
+    conn = db.get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE users SET name = ?, pass = ?, role_title = ?, institution_short_name = ? WHERE (id = ?)",
+        (
+            rh.headers["name"],
+            rh.headers["pass"],
+            rh.headers["role"],
+            rh.headers["institution"],
+            rh.headers["id"],
+        ),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
 
 
-@route("/users", HTTPMethod.PUT)
-def update_user(rh):
-    if "id" in rh.headers:
-        rh.set_headers(HTTPStatus.OK)
-        conn = db.get_connection()
-        cur = conn.cursor()
-        cur.execute(
-            "DELETE FROM users WHERE (id = ?)", (rh.headers["id"],)
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
-    else:
+@route("/users", HTTPMethod.DELETE)
+def delete_user(rh: RequestHandler):
+    if "id" not in rh.headers:
         rh.set_headers(HTTPStatus.BAD_REQUEST)
+        return
+
+    rh.set_headers(HTTPStatus.OK)
+    conn = db.get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM users WHERE (id = ?)", (rh.headers["id"],))
+    conn.commit()
+    cur.close()
+    conn.close()
