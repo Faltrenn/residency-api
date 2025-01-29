@@ -3,7 +3,6 @@ from http import HTTPMethod, HTTPStatus
 from routes.login import getRoleByToken
 from server import RequestHandler
 from typing import List
-import json
 import database as db
 import models
 from utils import get_body
@@ -44,11 +43,8 @@ def get_users(rh: RequestHandler):
         rh.set_headers(HTTPStatus.UNAUTHORIZED)
         return
 
-    rh.set_headers(HTTPStatus.OK, json=True)
     users = fetch_users()
-
-    data = json.dumps(users).encode("utf-8")
-    rh.wfile.write(data)
+    rh.set_headers(HTTPStatus.OK, data = users)
 
 
 @route("/users", HTTPMethod.POST)

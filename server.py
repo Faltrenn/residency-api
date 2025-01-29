@@ -36,15 +36,23 @@ class RequestHandler(BaseHTTPRequestHandler):
             for m in methods
         }
 
-    def set_headers(self, status: HTTPStatus, message: str | None = None, json=False):
+    def set_headers(
+        self,
+        status: HTTPStatus,
+        message: str | None = None,
+        data: dict | list | None = None,
+    ):
         self.send_response(status, message)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header(
             "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
         )
         self.send_header("Access-Control-Allow-Headers", "token, Content-Type")
-        if json:
+        if data:
             self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(data).encode("utf8"))
+            return
         self.end_headers()
 
     def run_routes(self, method: HTTPMethod):
@@ -54,13 +62,18 @@ class RequestHandler(BaseHTTPRequestHandler):
                     v(self)
                     return
                 except ValueError as ve:
-                    self.set_headers(HTTPStatus.BAD_REQUEST, json=True)
-                    self.wfile.write(json.dumps({"error": str(ve)}).encode("utf-8"))
+                    self.set_headers(
+                        HTTPStatus.BAD_REQUEST,
+                        data={"error": str(ve)},
+                    )
                 except BrokenPipeError:
                     print("Client disconnected before get response.")
                 except Exception as e:
                     print(f"Unexpected error: {e}")
-                    self.set_headers(HTTPStatus.INTERNAL_SERVER_ERROR, json=True)
+                    self.set_headers(
+                        HTTPStatus.INTERNAL_SERVER_ERROR,
+                        data={"error": "Internal server error"},
+                    )
                     self.wfile.write(
                         json.dumps({"error": "Internal server error"}).encode("utf-8")
                     )

@@ -1,6 +1,5 @@
 
 from http import HTTPMethod, HTTPStatus
-import json
 from common import route
 import database as db
 import models
@@ -24,7 +23,4 @@ def get_roles(rh: RequestHandler):
     cur.execute("SELECT * FROM institutions")
     rows = models.get_institutions(cur.fetchall())
 
-    roles = json.dumps(rows).encode("utf-8")
-
-    rh.set_headers(HTTPStatus.OK, json=True)
-    rh.wfile.write(roles)
+    rh.set_headers(HTTPStatus.OK, data = rows)
