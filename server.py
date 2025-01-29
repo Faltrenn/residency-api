@@ -36,7 +36,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             for m in methods
         }
 
-    def set_headers(self, status: HTTPStatus, message: str | None = None, json=True):
+    def set_headers(self, status: HTTPStatus, message: str | None = None, json=False):
         self.send_response(status, message)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header(
@@ -54,18 +54,20 @@ class RequestHandler(BaseHTTPRequestHandler):
                     v(self)
                     return
                 except ValueError as ve:
-                    self.set_headers(HTTPStatus.BAD_REQUEST)
+                    self.set_headers(HTTPStatus.BAD_REQUEST, json=True)
                     self.wfile.write(json.dumps({"error": str(ve)}).encode("utf-8"))
                 except BrokenPipeError:
                     print("Client disconnected before get response.")
                 except Exception as e:
                     print(f"Unexpected error: {e}")
-                    self.set_headers(HTTPStatus.INTERNAL_SERVER_ERROR)
-                    self.wfile.write(json.dumps({"error": "Internal server error"}).encode("utf-8"))
-        self.set_headers(HTTPStatus.NOT_FOUND, json=False)
+                    self.set_headers(HTTPStatus.INTERNAL_SERVER_ERROR, json=True)
+                    self.wfile.write(
+                        json.dumps({"error": "Internal server error"}).encode("utf-8")
+                    )
+        self.set_headers(HTTPStatus.NOT_FOUND)
 
     def do_OPTIONS(self):
-        self.set_headers(HTTPStatus.NO_CONTENT, json=False)
+        self.set_headers(HTTPStatus.NO_CONTENT)
 
     def do_GET(self):
         self.run_routes(HTTPMethod.GET)

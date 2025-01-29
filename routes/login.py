@@ -36,19 +36,19 @@ def login(rh: RequestHandler):
                 logins[user_id] = token
 
             response = {"token": token, "role": user["role"]}
-            rh.set_headers(HTTPStatus.OK)
+            rh.set_headers(HTTPStatus.OK, json=True)
             rh.wfile.write(json.dumps(response).encode("utf-8"))
         else:
-            rh.set_headers(HTTPStatus.NOT_FOUND)
+            rh.set_headers(HTTPStatus.NOT_FOUND, json=True)
             rh.wfile.write(json.dumps({"error": "Invalid credentials"}).encode("utf-8"))
     except ValueError as ve:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
+        rh.set_headers(HTTPStatus.BAD_REQUEST, json=True)
         rh.wfile.write(json.dumps({"error": str(ve)}).encode("utf-8"))
     except BrokenPipeError:
         print("Client disconnected before get response.")
     except Exception as e:
         print(f"Unexpected error: {e}")
-        rh.set_headers(HTTPStatus.INTERNAL_SERVER_ERROR)
+        rh.set_headers(HTTPStatus.INTERNAL_SERVER_ERROR, json=True)
         rh.wfile.write(json.dumps({"error": "Internal server error"}).encode("utf-8"))
 
 
@@ -63,11 +63,11 @@ def getRoleByToken(token: str) -> str | None:
 @route("/login/check", HTTPMethod.GET)
 def check(rh: RequestHandler):
     if not "token" in rh.headers:
-        rh.set_headers(HTTPStatus.BAD_REQUEST, json=False)
+        rh.set_headers(HTTPStatus.BAD_REQUEST)
         return
 
     if not rh.headers["token"] in logins.values():
-        rh.set_headers(HTTPStatus.UNAUTHORIZED)
+        rh.set_headers(HTTPStatus.UNAUTHORIZED, json=True)
         rh.wfile.write(
             json.dumps({"error": "Token is inactive or expired"}).encode("utf-8")
         )
@@ -77,5 +77,5 @@ def check(rh: RequestHandler):
     if role := getRoleByToken(rh.headers["token"]):
         response["role"] = role
 
-    rh.set_headers(HTTPStatus.OK)
+    rh.set_headers(HTTPStatus.OK, json=True)
     rh.wfile.write(json.dumps(response).encode("utf-8"))

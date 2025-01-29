@@ -25,5 +25,5 @@ def get_roles(rh: RequestHandler):
 
     roles = json.dumps(rows).encode("utf-8")
 
-    rh.set_headers(HTTPStatus.OK)
+    rh.set_headers(HTTPStatus.OK, json=True)
     rh.wfile.write(roles)

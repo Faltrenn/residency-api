@@ -44,7 +44,7 @@ def get_users(rh: RequestHandler):
         rh.set_headers(HTTPStatus.UNAUTHORIZED)
         return
 
-    rh.set_headers(HTTPStatus.OK)
+    rh.set_headers(HTTPStatus.OK, json=True)
     users = fetch_users()
 
     data = json.dumps(users).encode("utf-8")
