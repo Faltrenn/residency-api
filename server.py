@@ -56,6 +56,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def run_routes(self, method: HTTPMethod):
+        # TODO: Handle erros and make right return code
         for k, v in RequestHandler.routes[method].items():
             if re.search(k, self.path):
                 try:

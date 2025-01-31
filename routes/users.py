@@ -1,6 +1,5 @@
-from common import route
+from common import middleware, route
 from http import HTTPMethod, HTTPStatus
-from routes.login import getRoleByToken
 from server import RequestHandler
 from typing import List
 import database as db
@@ -32,16 +31,17 @@ def remove_user() -> List[dict]:
     return users
 
 
+@middleware(allowedRoles=["Admin", "Professor"])
 @route("/users", HTTPMethod.GET)
 def get_users(rh: RequestHandler):
-    if "token" not in rh.headers:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    role = getRoleByToken(rh.headers["token"])
-    if not role or role != "Admin":
-        rh.set_headers(HTTPStatus.UNAUTHORIZED)
-        return
+    # if "token" not in rh.headers:
+    #     rh.set_headers(HTTPStatus.BAD_REQUEST)
+    #     return
+    # role = getRoleByToken(rh.headers["token"])
+    # if not role or role != "Admin":
+    #     rh.set_headers(HTTPStatus.UNAUTHORIZED)
+    #     return
+    print("users")
 
     users = fetch_users()
     rh.set_headers(HTTPStatus.OK, data = users)
