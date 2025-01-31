@@ -105,14 +105,15 @@ def update_user(rh: RequestHandler):
 
 @route("/users", HTTPMethod.DELETE)
 def delete_user(rh: RequestHandler):
-    if "id" not in rh.headers:
+    body = get_body(rh)
+    if "id" not in body:
         rh.set_headers(HTTPStatus.BAD_REQUEST)
         return
 
     rh.set_headers(HTTPStatus.OK)
     conn = db.get_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM users WHERE (id = ?)", (rh.headers["id"],))
+    cur.execute("DELETE FROM users WHERE (id = ?)", (body["id"],))
     conn.commit()
     cur.close()
     conn.close()

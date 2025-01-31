@@ -1,4 +1,3 @@
-
 from http import HTTPMethod, HTTPStatus
 from common import route
 import database as db
@@ -23,4 +22,4 @@ def get_roles(rh: RequestHandler):
     cur.execute("SELECT * FROM institutions")
     rows = models.get_institutions(cur.fetchall())
 
-    rh.set_headers(HTTPStatus.OK, data = rows)
+    rh.set_headers(HTTPStatus.OK, data=rows)

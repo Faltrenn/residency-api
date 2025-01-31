@@ -30,3 +30,9 @@ def get_institution(row: list) -> dict:
 
 def get_institutions(rows: list) -> list[dict]:
     return [get_institution(row) for row in rows] if rows else []
+
+
+"""
+MVC
+Organização Orientada a Domínios
+"""
