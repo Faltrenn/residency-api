@@ -63,10 +63,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                     v(self)
                     return
                 except ValueError as ve:
-                    self.set_headers(
-                        HTTPStatus.BAD_REQUEST,
-                        data={"error": str(ve)},
-                    )
+                    self.set_headers(HTTPStatus.BAD_REQUEST, data={"error": str(ve)})
+                except PermissionError as pe:
+                    self.set_headers(HTTPStatus.UNAUTHORIZED, data={"error": str(pe)})
                 except BrokenPipeError:
                     print("Client disconnected before get response.")
                 except Exception as e:
@@ -74,9 +73,6 @@ class RequestHandler(BaseHTTPRequestHandler):
                     self.set_headers(
                         HTTPStatus.INTERNAL_SERVER_ERROR,
                         data={"error": "Internal server error"},
-                    )
-                    self.wfile.write(
-                        json.dumps({"error": "Internal server error"}).encode("utf-8")
                     )
         self.set_headers(HTTPStatus.NOT_FOUND)
 
