@@ -41,7 +41,6 @@ def get_users(rh: RequestHandler):
     # if not role or role != "Admin":
     #     rh.set_headers(HTTPStatus.UNAUTHORIZED)
     #     return
-    print("users")
 
     users = fetch_users()
     rh.set_headers(HTTPStatus.OK, data = users)
