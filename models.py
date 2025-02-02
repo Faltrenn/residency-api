@@ -32,6 +32,14 @@ def get_institutions(rows: list) -> list[dict]:
     return [get_institution(row) for row in rows] if rows else []
 
 
+def get_question(row: list) -> dict:
+    return {"id": row[0], "title": row[1]}
+
+
+def get_questions(rows: list) -> list[dict]:
+    return [get_question(row) for row in rows] if rows else []
+
+
 """
 MVC
 Organização Orientada a Domínios
