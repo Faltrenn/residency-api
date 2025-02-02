@@ -17,11 +17,19 @@ def get_questions(rh: RequestHandler):
     #     rh.set_headers(HTTPStatus.UNAUTHORIZED)
     #     return
 
-    conn = db.get_connection()
-    cur = conn.cursor()
+    results = db.execute_queries(
+        [
+            (
+                "SELECT q.*, a.id, a.title \
+                 FROM questions q INNER JOIN answers a \
+                 WHERE a.question_id = q.id\
+                 ORDER BY q.id",
+                (),
+            )
+        ]
+    )
 
-    cur.execute("SELECT * FROM questions")
-    questions = models.get_questions(cur.fetchall())
+    questions = models.get_questions(results[0])
 
     rh.set_headers(HTTPStatus.OK, data=questions)
 
@@ -31,7 +39,7 @@ def get_questions(rh: RequestHandler):
 def add_question(rh: RequestHandler):
     body = get_body(rh)
 
-    if not ("title" in body):
+    if not ("title" in body and "answers" not in body):
         raise ValueError("Invalid body")
 
     rh.set_headers(HTTPStatus.OK)
@@ -41,6 +49,12 @@ def add_question(rh: RequestHandler):
         "INSERT INTO questions (title) VALUES (?)",
         (body["title"],),
     )
+    q_id = cur.lastrowid
+    cur.executemany(
+        "INSERT INTO answers (title, question_id) VALUES (?, ?)",
+        [(answer["title"], q_id) for answer in body["answers"]],
+    )
+
     conn.commit()
     cur.close()
     conn.close()
@@ -69,6 +83,20 @@ def update_question(rh: RequestHandler):
             body["id"],
         ),
     )
+
+    for answer in body["answers"]:
+        cur.execute(
+            "UPDATE answers SET title = ? WHERE (id = ?)",
+            (
+                answer["title"],
+                answer["id"],
+            ),
+        )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
     rh.set_headers(HTTPStatus.OK)
 
 
@@ -88,6 +116,16 @@ def remove_question(rh: RequestHandler):
 
     body = get_body(rh)
 
+    for answer in body["answers"]:
+        cur.execute(
+            "DELETE FROM answers WHERE (id = ?)",
+            (answer["id"],),
+        )
+
     cur.execute("DELETE FROM questions WHERE id = ?", (body["id"],))
+
+    conn.commit()
+    cur.close()
+    conn.close()
 
     rh.set_headers(HTTPStatus.OK)
