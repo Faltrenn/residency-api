@@ -30,7 +30,7 @@ def middleware(allowedRoles: list[str]):
 
             if role not in allowedRoles:
                 raise PermissionError("Unauthorized")
-            print("middleware")
+
             func(*args)
 
         return wrapper

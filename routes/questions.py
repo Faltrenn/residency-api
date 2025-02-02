@@ -34,12 +34,11 @@ def get_questions(rh: RequestHandler):
     rh.set_headers(HTTPStatus.OK, data=questions)
 
 
-# TEST: Writed without test
 @route("/questions", HTTPMethod.POST)
 def add_question(rh: RequestHandler):
     body = get_body(rh)
 
-    if not ("title" in body and "answers" not in body):
+    if not ("title" in body and "answers" in body):
         raise ValueError("Invalid body")
 
     rh.set_headers(HTTPStatus.OK)
@@ -84,14 +83,10 @@ def update_question(rh: RequestHandler):
         ),
     )
 
-    for answer in body["answers"]:
-        cur.execute(
-            "UPDATE answers SET title = ? WHERE (id = ?)",
-            (
-                answer["title"],
-                answer["id"],
-            ),
-        )
+    cur.executemany(
+        "UPDATE answers SET title = ? WHERE (id = ?)",
+        [(answer["title"], answer["id"]) for answer in body["answers"]],
+    )
 
     conn.commit()
     cur.close()
@@ -116,11 +111,10 @@ def remove_question(rh: RequestHandler):
 
     body = get_body(rh)
 
-    for answer in body["answers"]:
-        cur.execute(
-            "DELETE FROM answers WHERE (id = ?)",
-            (answer["id"],),
-        )
+    cur.executemany(
+        "DELETE FROM answers WHERE (id = ?)",
+        [(answer["id"],) for answer in body["answers"]],
+    )
 
     cur.execute("DELETE FROM questions WHERE id = ?", (body["id"],))
 

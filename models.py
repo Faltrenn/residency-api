@@ -50,6 +50,8 @@ def get_questions(rows: list) -> list[dict]:
             question = {**get_question(row), "answers": [get_answer(row)]}
         else:
             question["answers"].append(get_answer(row))
+    if question:
+        questions.append(question)
 
     return questions
 
