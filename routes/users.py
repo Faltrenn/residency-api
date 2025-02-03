@@ -74,12 +74,14 @@ def add_user(rh: RequestHandler):
 
 @route("/users", HTTPMethod.PUT)
 def update_user(rh: RequestHandler):
+    body = get_body(rh)
+
     if not (
-        "id" in rh.headers
-        and "name" in rh.headers
-        and "role" in rh.headers
-        and "pass" in rh.headers
-        and "institution" in rh.headers
+        "id" in body
+        and "name" in body
+        and "role" in body
+        and "pass" in body
+        and "institution" in body
     ):
         rh.set_headers(HTTPStatus.BAD_REQUEST)
         return
@@ -90,11 +92,11 @@ def update_user(rh: RequestHandler):
     cur.execute(
         "UPDATE users SET name = ?, pass = ?, role_title = ?, institution_short_name = ? WHERE (id = ?)",
         (
-            rh.headers["name"],
-            rh.headers["pass"],
-            rh.headers["role"],
-            rh.headers["institution"],
-            rh.headers["id"],
+            body["name"],
+            body["pass"],
+            body["role"],
+            body["institution"],
+            body["id"],
         ),
     )
     conn.commit()
