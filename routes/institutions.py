@@ -93,4 +93,8 @@ def remove_institution(rh: RequestHandler):
 
     cur.execute("DELETE FROM institutions WHERE short_name = ?", (body["short_name"],))
 
+    cur.close()
+    conn.commit()
+    conn.close()
+
     rh.set_headers(HTTPStatus.OK)
