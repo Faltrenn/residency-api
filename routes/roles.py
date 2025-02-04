@@ -65,7 +65,7 @@ def update_role(rh: RequestHandler):
         "UPDATE roles SET title = ? WHERE (title = ?)",
         (
             body["title"],
-            body["title"],
+            body["last_title"],
         ),
     )
     conn.commit()
