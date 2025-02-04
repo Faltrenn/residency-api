@@ -72,6 +72,9 @@ def update_institution(rh: RequestHandler):
             body["short_name"],
         ),
     )
+    cur.close()
+    conn.commit()
+    conn.close()
     rh.set_headers(HTTPStatus.OK)
 
 

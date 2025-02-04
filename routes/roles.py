@@ -68,6 +68,9 @@ def update_role(rh: RequestHandler):
             body["title"],
         ),
     )
+    conn.commit()
+    cur.close()
+    conn.close()
     rh.set_headers(HTTPStatus.OK)
 
 
@@ -88,5 +91,9 @@ def remove_role(rh: RequestHandler):
     body = get_body(rh)
 
     cur.execute("DELETE FROM roles WHERE title = ?", (body["title"],))
+
+    conn.commit()
+    cur.close()
+    conn.close()
 
     rh.set_headers(HTTPStatus.OK)
