@@ -76,17 +76,28 @@ def update_question(rh: RequestHandler):
     cur = conn.cursor()
 
     cur.execute(
-        "UPDATE questions SET title = ? WHERE (id = ?)",
-        (
-            body["title"],
-            body["id"],
-        ),
+        "DELETE FROM questions_answereds WHERE answer_id IN (SELECT id FROM answers WHERE question_id = ?)",
+        (body["id"],),
     )
 
-    cur.executemany(
-        "UPDATE answers SET title = ? WHERE (id = ?)",
-        [(answer["title"], answer["id"]) for answer in body["answers"]],
+    # Agora, excluir `answers`
+    cur.execute("DELETE FROM answers WHERE question_id = ?", (body["id"],))
+
+    # Atualizar `questions`
+    cur.execute(
+        "UPDATE questions SET title = ? WHERE id = ?", (body["title"], body["id"])
     )
+
+    # Inserir novas respostas
+    cur.executemany(
+        "INSERT INTO answers (title, question_id) VALUES (?, ?)",
+        [(answer["title"], body["id"]) for answer in body["answers"]],
+    )
+
+    # cur.executemany(
+    #     "UPDATE answers SET title = ? WHERE (id = ?)",
+    #     [(answer["title"], answer["id"]) for answer in body["answers"]],
+    # )
 
     conn.commit()
     cur.close()
