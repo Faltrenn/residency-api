@@ -80,15 +80,12 @@ def update_question(rh: RequestHandler):
         (body["id"],),
     )
 
-    # Agora, excluir `answers`
     cur.execute("DELETE FROM answers WHERE question_id = ?", (body["id"],))
 
-    # Atualizar `questions`
     cur.execute(
         "UPDATE questions SET title = ? WHERE id = ?", (body["title"], body["id"])
     )
 
-    # Inserir novas respostas
     cur.executemany(
         "INSERT INTO answers (title, question_id) VALUES (?, ?)",
         [(answer["title"], body["id"]) for answer in body["answers"]],
@@ -122,10 +119,14 @@ def remove_question(rh: RequestHandler):
 
     body = get_body(rh)
 
-    cur.executemany(
-        "DELETE FROM answers WHERE (id = ?)",
-        [(answer["id"],) for answer in body["answers"]],
+    cur.execute(
+        "DELETE FROM answers WHERE question_id = ?",
+        (body["id"],),
     )
+    # cur.executemany(
+    #     "DELETE FROM answers WHERE (id = ?)",
+    #     [(answer["id"],) for answer in body["answers"]],
+    # )
 
     cur.execute("DELETE FROM questions WHERE id = ?", (body["id"],))
 
