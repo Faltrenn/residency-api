@@ -60,6 +60,47 @@ def get_answers(rows: list) -> list[dict]:
     return [get_answer(row) for row in rows] if rows else []
 
 
+def get_q(row: list) -> dict:
+    return {"id": row[0], "title": row[1], "answer": get_answer(row)}
+
+
+def get_questionnaire(row: list) -> dict:
+    questionnaire = {
+        "id": row[0],
+        "professor": get_user(row[4:9]),
+        "resident": get_user(row[9:14]),
+        "questions_answereds": [get_q(row[17:])],
+    }
+
+    return questionnaire
+
+
+def get_questionnaires(rows: list) -> list[dict]:
+    questionnaires = []
+    questionnaire = {
+        "id": rows[0][0],
+        "professor": get_user(rows[0][4:9]),
+        "resident": get_user(rows[0][9:14]),
+        "questions_answereds": [get_q(rows[0][17:])],
+    }
+    rows.pop(0)
+    for row in rows:
+        if row[0] != questionnaire["id"]:
+            questionnaires.append(questionnaire)
+
+            questionnaire = {
+                "id": row[0],
+                "professor": get_user(row[4:9]),
+                "resident": get_user(row[9:14]),
+                "questions_answereds": [get_q(row[17:])],
+            }
+        else:
+            questionnaire["questions_answereds"].append(get_q(row[17:]))
+    if questionnaire:
+        questionnaires.append(questionnaire)
+    return questionnaires
+
+
 """
 MVC
 Organização Orientada a Domínios
