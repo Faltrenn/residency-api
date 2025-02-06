@@ -34,21 +34,28 @@ def get_questionnaires(rh: RequestHandler):
 @route("/questionnaires", HTTPMethod.POST)
 def add_question(rh: RequestHandler):
     body = get_body(rh)
+    print(body)
 
-    if not ("title" in body and "answers" in body):
-        raise ValueError("Invalid body")
+    # if not ("title" in body and "answers" in body):
+    #     raise ValueError("Invalid body")
 
     rh.set_headers(HTTPStatus.OK)
     conn = db.get_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO questionnaires (title) VALUES (?)",
-        (body["title"],),
+        "INSERT INTO questionnaire (professor_id, resident_id) VALUES (?, ?)",
+        (
+            body["professor_id"],
+            body["resident_id"],
+        ),
     )
     q_id = cur.lastrowid
     cur.executemany(
-        "INSERT INTO answers (title, question_id) VALUES (?, ?)",
-        [(answer["title"], q_id) for answer in body["answers"]],
+        "INSERT INTO questions_answereds (questionnaire_id, question_id, answer_id) VALUES (?, ?, ?)",
+        [
+            (q_id, qa["question_id"], qa["answer_id"])
+            for qa in body["questions_answereds"]
+        ],
     )
 
     conn.commit()
@@ -115,7 +122,6 @@ def remove_question(rh: RequestHandler):
     cur = conn.cursor()
 
     body = get_body(rh)
-
 
     cur.execute(
         "DELETE FROM questions_answereds WHERE questionnaire_id = ?",
