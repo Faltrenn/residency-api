@@ -116,16 +116,18 @@ def remove_question(rh: RequestHandler):
 
     body = get_body(rh)
 
+
     cur.execute(
-        "DELETE FROM answers WHERE question_id = ?",
+        "DELETE FROM questions_answereds WHERE questionnaire_id = ?",
         (body["id"],),
     )
+
     # cur.executemany(
     #     "DELETE FROM answers WHERE (id = ?)",
     #     [(answer["id"],) for answer in body["answers"]],
     # )
 
-    cur.execute("DELETE FROM questionnaires WHERE id = ?", (body["id"],))
+    cur.execute("DELETE FROM questionnaire WHERE id = ?", (body["id"],))
 
     conn.commit()
     cur.close()
