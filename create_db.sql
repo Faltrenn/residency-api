@@ -86,20 +86,48 @@ VALUES
   ("alternativa 3 da pergunta 4", 4),
   ("alternativa 4 da pergunta 4", 4);
 
+CREATE TABLE IF NOT EXISTS procedures (title VARCHAR(100), PRIMARY KEY (title));
+
+INSERT INTO
+  procedures (title)
+VALUES
+  ("Apendicectomia"),
+  ("Colecistectomia"),
+  ("Hérnia inguinal"),
+  ("Histerectomia"),
+  ("Cesárea"),
+  ("Catarata"),
+  ("Bariátrica"),
+  ("Artroplastia de joelho"),
+  ("Artroplastia de quadril"),
+  ("Hemorrhoidectomia"),
+  ("Ressecção do intestino"),
+  ("Mastectomia"),
+  ("Amigdalectomia"),
+  ("Septoplastia"),
+  ("Reparo de fratura óssea"),
+  ("Endarterectomia carotídea"),
+  ("Prostatectomia"),
+  ("Vasectomia"),
+  ("Laqueadura tubária"),
+  ("Túnel do carpo");
+
 CREATE TABLE IF NOT EXISTS questionnaire (
   id INT AUTO_INCREMENT,
+  procedure_title VARCHAR(100) NOT NULL,
   professor_id INT NOT NULL,
   resident_id INT NOT NULL,
   created_at DATETIME,
+  FOREIGN KEY (procedure_title) REFERENCES procedures (title),
   FOREIGN KEY (professor_id) REFERENCES users (id),
   FOREIGN KEY (resident_id) REFERENCES users (id),
   PRIMARY KEY (id)
 );
 
 INSERT INTO
-  questionnaire (professor_id, resident_id)
+  questionnaire (procedure_title, professor_id, resident_id)
 VALUES
-  (2, 3);
+  ("vasectomia", 2, 3);
 
 CREATE TABLE IF NOT EXISTS questions_answereds (
   questionnaire_id INT NOT NULL,
