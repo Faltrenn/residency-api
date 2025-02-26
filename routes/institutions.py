@@ -69,7 +69,7 @@ def update_institution(rh: RequestHandler):
         (
             body["short_name"],
             body["name"],
-            body["short_name"],
+            body["last_short_name"],
         ),
     )
     cur.close()
