@@ -80,7 +80,7 @@ def get_questionnaires(rows: list) -> list[dict]:
         questionnaires = []
         questionnaire = {
             "id": rows[0][0],
-            "procedure": get_procedure(rows[0][1]),
+            "procedure": get_procedure([rows[0][1]]),
             "professor": get_user(rows[0][5:10]),
             "resident": get_user(rows[0][10:15]),
             "questions_answereds": [get_q(rows[0][18:])],
@@ -92,7 +92,7 @@ def get_questionnaires(rows: list) -> list[dict]:
 
                 questionnaire = {
                     "id": row[0],
-                    "procedure": get_procedure(row[1]),
+                    "procedure": get_procedure([row[1]]),
                     "professor": get_user(row[5:10]),
                     "resident": get_user(row[10:15]),
                     "questions_answereds": [get_q(row[18:])],
