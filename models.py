@@ -105,7 +105,7 @@ def get_questionnaires(rows: list) -> list[dict]:
     return []
 
 def get_procedure(row: list) -> dict:
-    return {"title": row}
+    return {"title": row[0]}
 
 
 def get_procedures(rows: list) -> list[dict]:
