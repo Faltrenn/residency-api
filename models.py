@@ -102,6 +102,12 @@ def get_questionnaires(rows: list) -> list[dict]:
         return questionnaires
     return []
 
+def get_procedure(row: list) -> dict:
+    return {"title": row[0]}
+
+
+def get_procedures(rows: list) -> list[dict]:
+    return [get_procedure(row) for row in rows] if rows else []
 
 """
 MVC
