@@ -42,8 +42,9 @@ def add_question(rh: RequestHandler):
     conn = db.get_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO questionnaire (professor_id, resident_id) VALUES (?, ?)",
+        "INSERT INTO questionnaire (procedure_title, professor_id, resident_id) VALUES (?, ?, ?)",
         (
+            body["procedure_title"],
             body["professor_id"],
             body["resident_id"],
         ),
@@ -65,22 +66,15 @@ def add_question(rh: RequestHandler):
 # TEST: Writed without test
 @route("/questionnaires", HTTPMethod.PUT)
 def update_question(rh: RequestHandler):
-    if "token" not in rh.headers:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    if (token := getRoleByToken(rh.headers["token"])) == None or token != "Admin":
-        rh.set_headers(HTTPStatus.UNAUTHORIZED)
-        return
-
     body = get_body(rh)
 
     conn = db.get_connection()
     cur = conn.cursor()
 
     cur.execute(
-        "UPDATE questionnaire set professor_id = ?, resident_id = ? WHERE id = ?",
+        "UPDATE questionnaire set procedure_title = ?, professor_id = ?, resident_id = ? WHERE id = ?",
         (
+            body["procedure_title"],
             body["professor_id"],
             body["resident_id"],
             body["id"],
@@ -109,14 +103,6 @@ def update_question(rh: RequestHandler):
 # TEST: Writed without test
 @route("/questionnaires", HTTPMethod.DELETE)
 def remove_question(rh: RequestHandler):
-    if "token" not in rh.headers:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    if (token := getRoleByToken(rh.headers["token"])) == None or token != "Admin":
-        rh.set_headers(HTTPStatus.UNAUTHORIZED)
-        return
-
     conn = db.get_connection()
     cur = conn.cursor()
 
