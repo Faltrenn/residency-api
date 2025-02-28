@@ -12,7 +12,7 @@ def get_procedures(rh: RequestHandler):
     conn = db.get_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM procedures")
+    cur.execute("SELECT * FROM procedures ORDER BY title")
     procedures = models.get_procedures(cur.fetchall())
 
     rh.set_headers(HTTPStatus.OK, data=procedures)

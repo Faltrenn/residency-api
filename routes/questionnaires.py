@@ -20,7 +20,7 @@ def get_questionnaires(rh: RequestHandler):
     results = db.execute_queries(
         [
             (
-                "SELECT * FROM questionnaire q INNER JOIN users p ON p.id = q.professor_id INNER JOIN users r ON r.id = q.resident_id  INNER JOIN questions_answereds qa ON qa.questionnaire_id = q.id INNER JOIN questions q2 ON q2.id = qa.question_id INNER JOIN answers a ON a.id = qa.answer_id ORDER BY q.id;",
+                "SELECT * FROM questionnaire q INNER JOIN users p ON p.id = q.professor_id INNER JOIN users r ON r.id = q.resident_id  INNER JOIN questions_answereds qa ON qa.questionnaire_id = q.id INNER JOIN questions q2 ON q2.id = qa.question_id INNER JOIN answers a ON a.id = qa.answer_id ORDER BY q.id",
                 (),
             )
         ]
@@ -34,7 +34,6 @@ def get_questionnaires(rh: RequestHandler):
 @route("/questionnaires", HTTPMethod.POST)
 def add_question(rh: RequestHandler):
     body = get_body(rh)
-    print(body)
 
     # if not ("title" in body and "answers" in body):
     #     raise ValueError("Invalid body")
@@ -75,7 +74,6 @@ def update_question(rh: RequestHandler):
         return
 
     body = get_body(rh)
-    print(body)
 
     conn = db.get_connection()
     cur = conn.cursor()
