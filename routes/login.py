@@ -1,4 +1,4 @@
-from common import route
+from common import Roles, route
 from http import HTTPMethod, HTTPStatus
 import string
 import json
@@ -50,11 +50,11 @@ def login(rh: RequestHandler):
         )
 
 
-def getRoleByToken(token: str) -> str | None:
+def getRoleByToken(token: str) -> Roles | None:
     for k, v in logins.items():
         if v == token:
             if user := get_user(k):
-                return user["role"]
+                return Roles.get_role(user["role"])
     return None
 
 

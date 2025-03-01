@@ -1,10 +1,8 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler
 from http import HTTPMethod, HTTPStatus
 import json
-from sys import argv
 import re
 import importlib
-import routes
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -18,6 +16,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             HTTPMethod.PUT,
             HTTPMethod.DELETE,
         )
+
+        import routes
 
         modules_names = [name for name in dir(routes) if not name.startswith("__")]
         functions = [
@@ -61,7 +61,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             if re.search(k, self.path):
                 try:
                     v(self)
-                    return
                 except ValueError as ve:
                     self.set_headers(HTTPStatus.BAD_REQUEST, data={"error": str(ve)})
                 except PermissionError as pe:
@@ -74,6 +73,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                         HTTPStatus.INTERNAL_SERVER_ERROR,
                         data={"error": "Internal server error"},
                     )
+                return
         self.set_headers(HTTPStatus.NOT_FOUND)
 
     def do_OPTIONS(self):
@@ -90,18 +90,3 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         self.run_routes(HTTPMethod.DELETE)
-
-
-if __name__ == "__main__":
-    if len(argv) < 3 or not argv[2].isnumeric():
-        print("WRONG USAGE!")
-        print("server.py ip port")
-    else:
-        RequestHandler.initialize()
-        server = HTTPServer((argv[1], int(argv[2])), RequestHandler)
-        print(f"Server started at {argv[1]}:{argv[2]}")
-        try:
-            server.serve_forever()
-        except KeyboardInterrupt:
-            pass
-        server.server_close()
