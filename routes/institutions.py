@@ -20,12 +20,9 @@ def get_institutions(rh: RequestHandler):
 
 
 @route("/institutions", HTTPMethod.POST)
-def add_institution(rh: RequestHandler):
-    body = get_body(rh)
-
-    if not ("short_name" in body and "name"):
-        raise ValueError("Invalid body")
-
+@middleware([Roles.ADMIN])
+@body_keys_needed(["short_name", "name"])
+def add_institution(rh: RequestHandler, body: dict):
     rh.set_headers(HTTPStatus.OK)
     conn = db.get_connection()
     cur = conn.cursor()
@@ -43,17 +40,9 @@ def add_institution(rh: RequestHandler):
 
 # TEST: Writed without test
 @route("/institutions", HTTPMethod.PUT)
-def update_institution(rh: RequestHandler):
-    if "token" not in rh.headers:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    if (token := getRoleByToken(rh.headers["token"])) == None or token != "Admin":
-        rh.set_headers(HTTPStatus.UNAUTHORIZED)
-        return
-
-    body = get_body(rh)
-
+@middleware([Roles.ADMIN])
+@body_keys_needed(["last_short_name", "short_name", "name"])
+def update_institution(rh: RequestHandler, body: dict):
     conn = db.get_connection()
     cur = conn.cursor()
 
@@ -65,6 +54,7 @@ def update_institution(rh: RequestHandler):
             body["last_short_name"],
         ),
     )
+
     cur.close()
     conn.commit()
     conn.close()
@@ -73,19 +63,11 @@ def update_institution(rh: RequestHandler):
 
 # TEST: Writed without test
 @route("/institutions", HTTPMethod.DELETE)
-def remove_institution(rh: RequestHandler):
-    if "token" not in rh.headers:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    if (token := getRoleByToken(rh.headers["token"])) == None or token != "Admin":
-        rh.set_headers(HTTPStatus.UNAUTHORIZED)
-        return
-
+@middleware([Roles.ADMIN])
+@body_keys_needed(["short_name"])
+def remove_institution(rh: RequestHandler, body: dict):
     conn = db.get_connection()
     cur = conn.cursor()
-
-    body = get_body(rh)
 
     cur.execute("DELETE FROM institutions WHERE short_name = ?", (body["short_name"],))
 
