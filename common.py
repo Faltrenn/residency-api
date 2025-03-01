@@ -41,7 +41,10 @@ def middleware(allowedRoles: list[Roles]):
             if not args:
                 raise AssertionError("No positional arguments provided")
 
-            rh: RequestHandler = args[0]
+            rh = args[0]
+
+            if not isinstance(rh, RequestHandler):
+                raise ValueError("First argument is not a RequestHandler object", rh)
 
             if not "token" in rh.headers:
                 raise ValueError("Missing token")
@@ -80,7 +83,7 @@ def body_keys_needed(keys_needed: list[str]):
                 if kn not in body:
                     raise ValueError(f"Missing {kn} in body")
 
-            return func(*args)
+            return func(*args, body=body)
 
         return wrapper
 
