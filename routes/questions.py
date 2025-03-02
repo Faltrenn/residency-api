@@ -31,8 +31,7 @@ def get_questions(rh: RequestHandler):
 @middleware([Roles.ADMIN])
 @body_keys_needed(["title", "answers"])
 def add_question(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
     cur.execute(
         "INSERT INTO questions (title) VALUES (?)",
         (body["title"],),
@@ -45,9 +44,7 @@ def add_question(rh: RequestHandler, body: dict):
         [(answer["title"], q_id) for answer in body["answers"]],
     )
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)
 
@@ -56,8 +53,7 @@ def add_question(rh: RequestHandler, body: dict):
 @middleware([Roles.ADMIN])
 @body_keys_needed(["id", "title", "answers"])
 def update_question(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
         "DELETE FROM questions_answereds WHERE answer_id IN (SELECT id FROM answers WHERE question_id = ?)",
@@ -75,9 +71,7 @@ def update_question(rh: RequestHandler, body: dict):
         [(answer["title"], body["id"]) for answer in body["answers"]],
     )
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)
 
@@ -86,8 +80,7 @@ def update_question(rh: RequestHandler, body: dict):
 @middleware([Roles.ADMIN])
 @body_keys_needed(["id"])
 def remove_question(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
         "DELETE FROM answers WHERE question_id = ?",
@@ -96,8 +89,6 @@ def remove_question(rh: RequestHandler, body: dict):
 
     cur.execute("DELETE FROM questions WHERE id = ?", (body["id"],))
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)

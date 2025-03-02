@@ -3,8 +3,7 @@ import models
 
 
 def auth_user(username: str, password: str) -> dict | None:
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
     cur.execute("SELECT * from users WHERE name = ? AND pass = ?", (username, password))
     user = models.get_user(cur.fetchone())
 
@@ -14,8 +13,7 @@ def auth_user(username: str, password: str) -> dict | None:
 
 
 def get_user(id: int) -> dict | None:
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
     cur.execute("SELECT * from users WHERE id = ?", (id,))
     user = models.get_user(cur.fetchone())
 

@@ -28,8 +28,7 @@ def get_questionnaires(rh: RequestHandler):
     ["procedure_title", "professor_id", "resident_id", "questions_answereds"]
 )
 def add_question(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
     cur.execute(
         "INSERT INTO questionnaire (procedure_title, professor_id, resident_id) VALUES (?, ?, ?)",
         (
@@ -48,9 +47,7 @@ def add_question(rh: RequestHandler, body: dict):
         ],
     )
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)
 
@@ -61,8 +58,7 @@ def add_question(rh: RequestHandler, body: dict):
     ["id", "procedure_title", "professor_id", "resident_id", "questions_answereds"]
 )
 def update_question(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
         "UPDATE questionnaire set procedure_title = ?, professor_id = ?, resident_id = ? WHERE id = ?",
@@ -86,9 +82,7 @@ def update_question(rh: RequestHandler, body: dict):
         ],
     )
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)
 
@@ -97,8 +91,7 @@ def update_question(rh: RequestHandler, body: dict):
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(["id"])
 def remove_question(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
         "DELETE FROM questions_answereds WHERE questionnaire_id = ?",
@@ -107,8 +100,6 @@ def remove_question(rh: RequestHandler, body: dict):
 
     cur.execute("DELETE FROM questionnaire WHERE id = ?", (body["id"],))
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)

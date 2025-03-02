@@ -3,13 +3,19 @@ import mariadb
 from config import DB_CONFIG
 
 
-def get_connection() -> mariadb.Connection:
-    return mariadb.connect(**DB_CONFIG)
+def get_connection_and_cursor() -> tuple[mariadb.Connection, mariadb.Cursor]:
+    conn = mariadb.connect(**DB_CONFIG)
+    return conn, conn.cursor()
+
+
+def cc_connection_and_cursor(conn: mariadb.Connection, cur: mariadb.Cursor):
+    conn.commit()
+    cur.close()
+    conn.close()
 
 
 def execute_queries(queries):
-    conn = get_connection()
-    cur = conn.cursor()
+    conn, cur = get_connection_and_cursor()
     results = []
 
     try:
@@ -17,7 +23,9 @@ def execute_queries(queries):
             if query.strip().lower().startswith("select"):
                 cur.execute(query, params)
                 results.append(cur.fetchall())
-            elif query.strip().lower().startswith("insert") and isinstance(params[0], list):
+            elif query.strip().lower().startswith("insert") and isinstance(
+                params[0], list
+            ):
                 cur.executemany(query, params)
             else:
                 cur.execute(query, params)
@@ -27,7 +35,6 @@ def execute_queries(queries):
         conn.rollback()
         raise e
     finally:
-        cur.close()
-        conn.close()
+        cc_connection_and_cursor(conn, cur)
 
     return results

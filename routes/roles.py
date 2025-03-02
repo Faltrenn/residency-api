@@ -10,11 +10,12 @@ from utils import get_body
 @route("/roles", HTTPMethod.GET)
 @middleware([Roles.ADMIN])
 def get_roles(rh: RequestHandler):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute("SELECT * FROM roles")
     roles = models.get_roles(cur.fetchall())
+
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK, data=roles)
 
@@ -23,24 +24,22 @@ def get_roles(rh: RequestHandler):
 @middleware([Roles.ADMIN])
 @body_keys_needed(["title"])
 def add_role(rh: RequestHandler, body: dict):
-    rh.set_headers(HTTPStatus.OK)
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
     cur.execute(
         "INSERT INTO roles (title) VALUES (?)",
         (body["title"],),
     )
-    conn.commit()
-    cur.close()
-    conn.close()
+
+    db.cc_connection_and_cursor(conn, cur)
+
+    rh.set_headers(HTTPStatus.OK)
 
 
 @route("/roles", HTTPMethod.PUT)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["last_title", "title"])
 def update_role(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
         "UPDATE roles SET title = ? WHERE (title = ?)",
@@ -49,9 +48,8 @@ def update_role(rh: RequestHandler, body: dict):
             body["last_title"],
         ),
     )
-    conn.commit()
-    cur.close()
-    conn.close()
+
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)
 
@@ -60,13 +58,10 @@ def update_role(rh: RequestHandler, body: dict):
 @middleware([Roles.ADMIN])
 @body_keys_needed(["title"])
 def remove_role(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute("DELETE FROM roles WHERE title = ?", (body["title"],))
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)

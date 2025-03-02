@@ -7,26 +7,22 @@ import models
 
 
 def fetch_users() -> List[dict]:
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
     cur.execute("select * from users")
     rows = cur.fetchall()
     users = models.get_users(rows)
 
-    conn.close()
-    cur.close()
+    db.cc_connection_and_cursor(conn, cur)
     return users
 
 
 def remove_user() -> List[dict]:
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
     cur.execute("select * from users")
     rows = cur.fetchall()
     users = models.get_users(rows)
 
-    conn.close()
-    cur.close()
+    db.cc_connection_and_cursor(conn, cur)
     return users
 
 
@@ -41,8 +37,7 @@ def get_users(rh: RequestHandler):
 @middleware([Roles.ADMIN])
 @body_keys_needed(["name", "role", "institution", "pass"])
 def add_user(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
     cur.execute(
         "INSERT INTO users (name, role_title, institution_short_name, pass) VALUES (?, ?, ?, ?)",
         (
@@ -52,9 +47,8 @@ def add_user(rh: RequestHandler, body: dict):
             body["pass"],
         ),
     )
-    conn.commit()
-    cur.close()
-    conn.close()
+
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)
 
@@ -63,8 +57,7 @@ def add_user(rh: RequestHandler, body: dict):
 @middleware([Roles.ADMIN])
 @body_keys_needed(["id", "name", "role", "institution", "pass"])
 def update_user(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
     cur.execute(
         "UPDATE users SET name = ?, role_title = ?, institution_short_name = ?, pass = ? WHERE (id = ?)",
         (
@@ -75,9 +68,8 @@ def update_user(rh: RequestHandler, body: dict):
             body["id"],
         ),
     )
-    conn.commit()
-    cur.close()
-    conn.close()
+
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)
 
@@ -86,13 +78,10 @@ def update_user(rh: RequestHandler, body: dict):
 @middleware([Roles.ADMIN])
 @body_keys_needed(["id"])
 def delete_user(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute("DELETE FROM users WHERE (id = ?)", (body["id"],))
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)

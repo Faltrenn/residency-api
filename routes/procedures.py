@@ -8,11 +8,12 @@ from server import RequestHandler
 @route("/procedures", HTTPMethod.GET)
 @middleware([Roles.ADMIN, Roles.TEACHER])
 def get_procedures(rh: RequestHandler):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute("SELECT * FROM procedures ORDER BY title")
     procedures = models.get_procedures(cur.fetchall())
+
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK, data=procedures)
 
@@ -21,17 +22,14 @@ def get_procedures(rh: RequestHandler):
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(["title"])
 def add_role(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
         "INSERT INTO procedures (title) VALUES (?)",
         (body["title"],),
     )
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)
 
@@ -40,8 +38,7 @@ def add_role(rh: RequestHandler, body: dict):
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(["last_title", "title"])
 def update_role(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
         "UPDATE procedures SET title = ? WHERE (title = ?)",
@@ -51,9 +48,8 @@ def update_role(rh: RequestHandler, body: dict):
         ),
     )
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.cc_connection_and_cursor(conn, cur)
+
     rh.set_headers(HTTPStatus.OK)
 
 
@@ -61,13 +57,10 @@ def update_role(rh: RequestHandler, body: dict):
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(["title"])
 def remove_role(rh: RequestHandler, body: dict):
-    conn = db.get_connection()
-    cur = conn.cursor()
+    conn, cur = db.get_connection_and_cursor()
 
     cur.execute("DELETE FROM procedures WHERE title = ?", (body["title"],))
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.cc_connection_and_cursor(conn, cur)
 
     rh.set_headers(HTTPStatus.OK)
