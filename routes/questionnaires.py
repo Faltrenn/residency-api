@@ -48,7 +48,7 @@ def get_questionnaires(rh: RequestHandler, user_info: UserInfo):
 @route("/questionnaires", HTTPMethod.POST)
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(
-        ["procedure_title", "professor_id", "resident_id", "questions_answereds"]
+    ["procedure_title", "professor_id", "resident_id", "questions_answereds"]
 )
 def add_questionnaire(rh: RequestHandler, body: dict, user_info: UserInfo):
     _ = user_info
@@ -84,6 +84,21 @@ def add_questionnaire(rh: RequestHandler, body: dict, user_info: UserInfo):
 def update_questionnaire(rh: RequestHandler, body: dict, user_info: UserInfo):
     _ = user_info
     conn, cur = db.get_connection_and_cursor()
+
+    # TODO: Make a function that simplify all db exists verification(simple :D)
+    cur.execute(
+        "SELECT professor_id FROM questionnaire WHERE id = ?",
+        (body["id"],),
+    )
+
+    row = cur.fetchone()
+    
+    if not row:
+        raise ValueError("The questionnaire does not exist")
+
+    if user_info.role is Roles.TEACHER:
+        if row[0] != user_info.id:
+            raise PermissionError("You are not the owner of this Questionnaire")
 
     cur.execute(
         "UPDATE questionnaire set procedure_title = ?, professor_id = ?, resident_id = ? WHERE id = ?",
