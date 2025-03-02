@@ -65,6 +65,6 @@ def check(rh: RequestHandler):
 
     response = {}
     if role := getRoleByToken(rh.headers["token"]):
-        response["role"] = role
+        response["role"] = Roles.get_role_title(role)
 
     rh.set_headers(HTTPStatus.OK, data=response)

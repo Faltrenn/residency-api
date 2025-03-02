@@ -23,6 +23,16 @@ class Roles(Enum):
         return None
 
     @staticmethod
+    def get_role_title(role: "Roles") -> str:
+        match (role):
+            case Roles.ADMIN:
+                return "Admin"
+            case Roles.TEACHER:
+                return "Professor"
+            case Roles.RESIDENT:
+                return "Residente"
+
+    @staticmethod
     def all() -> List["Roles"]:
         return list(Roles)
 
