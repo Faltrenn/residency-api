@@ -1,10 +1,9 @@
-from common import middleware, route
+from common import Roles, body_keys_needed, middleware, route
 from http import HTTPMethod, HTTPStatus
 from server import RequestHandler
 from typing import List
 import database as db
 import models
-from utils import get_body
 
 
 def fetch_users() -> List[dict]:
@@ -31,71 +30,48 @@ def remove_user() -> List[dict]:
     return users
 
 
-@middleware(allowedRoles=["Admin", "Professor"])
 @route("/users", HTTPMethod.GET)
+@middleware([Roles.ADMIN, Roles.TEACHER])
 def get_users(rh: RequestHandler):
-    # if "token" not in rh.headers:
-    #     rh.set_headers(HTTPStatus.BAD_REQUEST)
-    #     return
-    # role = getRoleByToken(rh.headers["token"])
-    # if not role or role != "Admin":
-    #     rh.set_headers(HTTPStatus.UNAUTHORIZED)
-    #     return
-
     users = fetch_users()
-    rh.set_headers(HTTPStatus.OK, data = users)
+    rh.set_headers(HTTPStatus.OK, data=users)
 
 
 @route("/users", HTTPMethod.POST)
-def add_user(rh: RequestHandler):
-    body = get_body(rh)
-
-    if not (
-        "name" in body and "role" in body and "pass" in body and "institution" in body
-    ):
-        raise ValueError("Invalid body")
-
-    rh.set_headers(HTTPStatus.OK)
+@middleware([Roles.ADMIN])
+@body_keys_needed(["name", "role", "institution", "pass"])
+def add_user(rh: RequestHandler, body: dict):
     conn = db.get_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO users (name, pass, role_title, institution_short_name) VALUES (?, ?, ?, ?)",
+        "INSERT INTO users (name, role_title, institution_short_name, pass) VALUES (?, ?, ?, ?)",
         (
             body["name"],
-            body["pass"],
             body["role"],
             body["institution"],
+            body["pass"],
         ),
     )
     conn.commit()
     cur.close()
     conn.close()
 
+    rh.set_headers(HTTPStatus.OK)
+
 
 @route("/users", HTTPMethod.PUT)
-def update_user(rh: RequestHandler):
-    body = get_body(rh)
-
-    if not (
-        "id" in body
-        and "name" in body
-        and "role" in body
-        and "pass" in body
-        and "institution" in body
-    ):
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    rh.set_headers(HTTPStatus.OK)
+@middleware([Roles.ADMIN])
+@body_keys_needed(["id", "name", "role", "institution", "pass"])
+def update_user(rh: RequestHandler, body: dict):
     conn = db.get_connection()
     cur = conn.cursor()
     cur.execute(
-        "UPDATE users SET name = ?, pass = ?, role_title = ?, institution_short_name = ? WHERE (id = ?)",
+        "UPDATE users SET name = ?, role_title = ?, institution_short_name = ?, pass = ? WHERE (id = ?)",
         (
             body["name"],
-            body["pass"],
             body["role"],
             body["institution"],
+            body["pass"],
             body["id"],
         ),
     )
@@ -103,18 +79,20 @@ def update_user(rh: RequestHandler):
     cur.close()
     conn.close()
 
+    rh.set_headers(HTTPStatus.OK)
+
 
 @route("/users", HTTPMethod.DELETE)
-def delete_user(rh: RequestHandler):
-    body = get_body(rh)
-    if "id" not in body:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    rh.set_headers(HTTPStatus.OK)
+@middleware([Roles.ADMIN])
+@body_keys_needed(["id"])
+def delete_user(rh: RequestHandler, body: dict):
     conn = db.get_connection()
     cur = conn.cursor()
+
     cur.execute("DELETE FROM users WHERE (id = ?)", (body["id"],))
+
     conn.commit()
     cur.close()
     conn.close()
+
+    rh.set_headers(HTTPStatus.OK)
