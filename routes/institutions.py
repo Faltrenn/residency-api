@@ -2,9 +2,7 @@ from http import HTTPMethod, HTTPStatus
 from common import Roles, body_keys_needed, middleware, route
 import database as db
 import models
-from routes.login import getRoleByToken
 from server import RequestHandler
-from utils import get_body
 
 
 @route("/institutions", HTTPMethod.GET)
@@ -38,7 +36,6 @@ def add_institution(rh: RequestHandler, body: dict):
     conn.close()
 
 
-# TEST: Writed without test
 @route("/institutions", HTTPMethod.PUT)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["last_short_name", "short_name", "name"])
@@ -61,7 +58,6 @@ def update_institution(rh: RequestHandler, body: dict):
     rh.set_headers(HTTPStatus.OK)
 
 
-# TEST: Writed without test
 @route("/institutions", HTTPMethod.DELETE)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["short_name"])

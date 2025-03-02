@@ -36,7 +36,6 @@ def add_role(rh: RequestHandler, body: dict):
     rh.set_headers(HTTPStatus.OK)
 
 
-# TEST: Writed without test
 @route("/procedures", HTTPMethod.PUT)
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(["last_title", "title"])
@@ -58,7 +57,6 @@ def update_role(rh: RequestHandler, body: dict):
     rh.set_headers(HTTPStatus.OK)
 
 
-# TEST: Writed without test
 @route("/procedures", HTTPMethod.DELETE)
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(["title"])
