@@ -6,9 +6,14 @@ import database as db
 import models
 
 
-def fetch_users() -> List[dict]:
+def fetch_users(role: Roles) -> List[dict]:
     conn, cur = db.get_connection_and_cursor()
-    cur.execute("select * from users")
+
+    cur.execute(
+        "SELECT * FROM users"
+        if role is Roles.ADMIN
+        else "SELECT * FROM users EXCEPT(SELECT * FROM users WHERE role_title = 'Admin' OR role_title = 'Professor')"
+    )
     rows = cur.fetchall()
     users = models.get_users(rows)
 
@@ -28,15 +33,16 @@ def remove_user() -> List[dict]:
 
 @route("/users", HTTPMethod.GET)
 @middleware([Roles.ADMIN, Roles.TEACHER])
-def get_users(rh: RequestHandler):
-    users = fetch_users()
+def get_users(rh: RequestHandler, role: Roles):
+    users = fetch_users(role)
     rh.set_headers(HTTPStatus.OK, data=users)
 
 
 @route("/users", HTTPMethod.POST)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["name", "role", "institution", "pass"])
-def add_user(rh: RequestHandler, body: dict):
+def add_user(rh: RequestHandler, body: dict, role: Roles):
+    _ = role
     conn, cur = db.get_connection_and_cursor()
     cur.execute(
         "INSERT INTO users (name, role_title, institution_short_name, pass) VALUES (?, ?, ?, ?)",
@@ -56,7 +62,8 @@ def add_user(rh: RequestHandler, body: dict):
 @route("/users", HTTPMethod.PUT)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["id", "name", "role", "institution", "pass"])
-def update_user(rh: RequestHandler, body: dict):
+def update_user(rh: RequestHandler, body: dict, role: Roles):
+    _ = role
     conn, cur = db.get_connection_and_cursor()
     cur.execute(
         "UPDATE users SET name = ?, role_title = ?, institution_short_name = ?, pass = ? WHERE (id = ?)",
@@ -77,7 +84,8 @@ def update_user(rh: RequestHandler, body: dict):
 @route("/users", HTTPMethod.DELETE)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["id"])
-def delete_user(rh: RequestHandler, body: dict):
+def delete_user(rh: RequestHandler, body: dict, role: Roles):
+    _ = role
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute("DELETE FROM users WHERE (id = ?)", (body["id"],))

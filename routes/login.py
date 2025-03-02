@@ -3,6 +3,7 @@ from http import HTTPMethod, HTTPStatus
 import string
 import random
 
+from database import cc_connection_and_cursor, get_connection_and_cursor
 from server import RequestHandler
 from services.auth import auth_user, get_user
 

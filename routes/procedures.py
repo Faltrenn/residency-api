@@ -7,7 +7,8 @@ from server import RequestHandler
 
 @route("/procedures", HTTPMethod.GET)
 @middleware([Roles.ADMIN, Roles.TEACHER])
-def get_procedures(rh: RequestHandler):
+def get_procedures(rh: RequestHandler, role: Roles):
+    _ = role
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute("SELECT * FROM procedures ORDER BY title")
@@ -21,7 +22,8 @@ def get_procedures(rh: RequestHandler):
 @route("/procedures", HTTPMethod.POST)
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(["title"])
-def add_role(rh: RequestHandler, body: dict):
+def add_role(rh: RequestHandler, body: dict, role: Roles):
+    _ = role
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
@@ -37,7 +39,8 @@ def add_role(rh: RequestHandler, body: dict):
 @route("/procedures", HTTPMethod.PUT)
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(["last_title", "title"])
-def update_role(rh: RequestHandler, body: dict):
+def update_role(rh: RequestHandler, body: dict, role: Roles):
+    _ = role
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
@@ -56,7 +59,8 @@ def update_role(rh: RequestHandler, body: dict):
 @route("/procedures", HTTPMethod.DELETE)
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(["title"])
-def remove_role(rh: RequestHandler, body: dict):
+def remove_role(rh: RequestHandler, body: dict, role: Roles):
+    _ = role
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute("DELETE FROM procedures WHERE title = ?", (body["title"],))

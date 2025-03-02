@@ -47,7 +47,7 @@ def route(path: str, method: HTTPMethod):
 
 def middleware(allowedRoles: list[Roles]):
     def decorator(func):
-        def wrapper(*args):
+        def wrapper(*args, **kwargs):
             if not args:
                 raise AssertionError("No positional arguments provided")
 
@@ -69,7 +69,7 @@ def middleware(allowedRoles: list[Roles]):
             if role not in allowedRoles:
                 raise PermissionError("Unauthorized")
 
-            return func(*args)
+            return func(*args, **kwargs, role = role)
 
         return wrapper
 
@@ -78,7 +78,7 @@ def middleware(allowedRoles: list[Roles]):
 
 def body_keys_needed(keys_needed: list[str]):
     def decorator(func):
-        def wrapper(*args):
+        def wrapper(*args, **kwargs):
             if not args:
                 raise AssertionError("No positional arguments provided")
 
@@ -93,7 +93,7 @@ def body_keys_needed(keys_needed: list[str]):
                 if kn not in body:
                     raise ValueError(f"Missing {kn} in body")
 
-            return func(*args, body=body)
+            return func(*args, **kwargs, body=body)
 
         return wrapper
 

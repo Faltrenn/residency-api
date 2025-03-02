@@ -7,7 +7,8 @@ from server import RequestHandler
 
 @route("/institutions", HTTPMethod.GET)
 @middleware([Roles.ADMIN, Roles.TEACHER])
-def get_institutions(rh: RequestHandler):
+def get_institutions(rh: RequestHandler, role: Roles):
+    _ = role
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute("SELECT * FROM institutions")
@@ -21,7 +22,8 @@ def get_institutions(rh: RequestHandler):
 @route("/institutions", HTTPMethod.POST)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["short_name", "name"])
-def add_institution(rh: RequestHandler, body: dict):
+def add_institution(rh: RequestHandler, body: dict, role: Roles):
+    _ = role
     conn, cur = db.get_connection_and_cursor()
     cur.execute(
         "INSERT INTO institutions (short_name, name) VALUES (?, ?)",
@@ -39,7 +41,8 @@ def add_institution(rh: RequestHandler, body: dict):
 @route("/institutions", HTTPMethod.PUT)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["last_short_name", "short_name", "name"])
-def update_institution(rh: RequestHandler, body: dict):
+def update_institution(rh: RequestHandler, body: dict, role: Roles):
+    _ = role
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
@@ -59,7 +62,8 @@ def update_institution(rh: RequestHandler, body: dict):
 @route("/institutions", HTTPMethod.DELETE)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["short_name"])
-def remove_institution(rh: RequestHandler, body: dict):
+def remove_institution(rh: RequestHandler, body: dict, role: Roles):
+    _ = role
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute("DELETE FROM institutions WHERE short_name = ?", (body["short_name"],))
