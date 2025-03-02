@@ -37,6 +37,13 @@ class Roles(Enum):
         return list(Roles)
 
 
+class UserInfo:
+    def __init__(self, id: int, role: Roles, token: str) -> None:
+        self.id = id
+        self.role = role
+        self.token = token
+
+
 def route(path: str, method: HTTPMethod):
     def decorator(func):
         setattr(func, "api", (path, method))
@@ -61,7 +68,9 @@ def middleware(allowedRoles: list[Roles]):
 
             from routes.login import getRoleByToken
 
-            role = getRoleByToken(rh.headers["token"])
+            token = rh.headers["token"]
+
+            role = getRoleByToken(token)
 
             if not role:
                 raise ValueError("Invalid Role")
@@ -69,7 +78,15 @@ def middleware(allowedRoles: list[Roles]):
             if role not in allowedRoles:
                 raise PermissionError("Unauthorized")
 
-            return func(*args, **kwargs, role = role)
+            from routes.login import get_id_by_token
+
+            id = get_id_by_token(token)
+
+            return func(
+                *args,
+                **kwargs,
+                user_info=UserInfo(id, role, token) if id else None,
+            )
 
         return wrapper
 

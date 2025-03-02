@@ -1,5 +1,5 @@
 from http import HTTPMethod, HTTPStatus
-from common import Roles, body_keys_needed, middleware, route
+from common import Roles, UserInfo, body_keys_needed, middleware, route
 import database as db
 import models
 from server import RequestHandler
@@ -7,8 +7,8 @@ from server import RequestHandler
 
 @route("/roles", HTTPMethod.GET)
 @middleware([Roles.ADMIN])
-def get_roles(rh: RequestHandler, role: Roles):
-    _ = role
+def get_roles(rh: RequestHandler, user_info: UserInfo):
+    _ = user_info
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute("SELECT * FROM roles")
@@ -22,8 +22,8 @@ def get_roles(rh: RequestHandler, role: Roles):
 @route("/roles", HTTPMethod.POST)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["title"])
-def add_role(rh: RequestHandler, body: dict, role: Roles):
-    _ = role
+def add_role(rh: RequestHandler, body: dict, user_info: UserInfo):
+    _ = user_info
     conn, cur = db.get_connection_and_cursor()
     cur.execute(
         "INSERT INTO roles (title) VALUES (?)",
@@ -38,8 +38,8 @@ def add_role(rh: RequestHandler, body: dict, role: Roles):
 @route("/roles", HTTPMethod.PUT)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["last_title", "title"])
-def update_role(rh: RequestHandler, body: dict, role: Roles):
-    _ = role
+def update_role(rh: RequestHandler, body: dict, user_info: UserInfo):
+    _ = user_info
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
@@ -58,8 +58,8 @@ def update_role(rh: RequestHandler, body: dict, role: Roles):
 @route("/roles", HTTPMethod.DELETE)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["title"])
-def remove_role(rh: RequestHandler, body: dict, role: Roles):
-    _ = role
+def remove_role(rh: RequestHandler, body: dict, user_info: UserInfo):
+    _ = user_info
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute("DELETE FROM roles WHERE title = ?", (body["title"],))

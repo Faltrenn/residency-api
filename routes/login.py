@@ -3,7 +3,6 @@ from http import HTTPMethod, HTTPStatus
 import string
 import random
 
-from database import cc_connection_and_cursor, get_connection_and_cursor
 from server import RequestHandler
 from services.auth import auth_user, get_user
 
@@ -49,6 +48,13 @@ def getRoleByToken(token: str) -> Roles | None:
         if v == token:
             if user := get_user(k):
                 return Roles.get_role(user["role"])
+    return None
+
+def get_id_by_token(token: str) -> int | None:
+    for k, v in logins.items():
+        if v == token:
+            if get_user(k):
+                return k
     return None
 
 

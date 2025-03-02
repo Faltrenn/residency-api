@@ -1,5 +1,5 @@
 from http import HTTPMethod, HTTPStatus
-from common import Roles, body_keys_needed, middleware, route
+from common import Roles, UserInfo, body_keys_needed, middleware, route
 import database as db
 import models
 from server import RequestHandler
@@ -7,8 +7,8 @@ from server import RequestHandler
 
 @route("/questions", HTTPMethod.GET)
 @middleware([Roles.ADMIN, Roles.TEACHER])
-def get_questions(rh: RequestHandler, role: Roles):
-    _ = role
+def get_questions(rh: RequestHandler, user_info: UserInfo):
+    _ = user_info
     results = db.execute_queries(
         [
             (
@@ -29,8 +29,8 @@ def get_questions(rh: RequestHandler, role: Roles):
 @route("/questions", HTTPMethod.POST)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["title", "answers"])
-def add_question(rh: RequestHandler, body: dict, role: Roles):
-    _ = role
+def add_question(rh: RequestHandler, body: dict, user_info: UserInfo):
+    _ = user_info
     conn, cur = db.get_connection_and_cursor()
     cur.execute(
         "INSERT INTO questions (title) VALUES (?)",
@@ -52,8 +52,8 @@ def add_question(rh: RequestHandler, body: dict, role: Roles):
 @route("/questions", HTTPMethod.PUT)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["id", "title", "answers"])
-def update_question(rh: RequestHandler, body: dict, role: Roles):
-    _ = role
+def update_question(rh: RequestHandler, body: dict, user_info: UserInfo):
+    _ = user_info
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
@@ -80,8 +80,8 @@ def update_question(rh: RequestHandler, body: dict, role: Roles):
 @route("/questions", HTTPMethod.DELETE)
 @middleware([Roles.ADMIN])
 @body_keys_needed(["id"])
-def remove_question(rh: RequestHandler, body: dict, role: Roles):
-    _ = role
+def remove_question(rh: RequestHandler, body: dict, user_info: UserInfo):
+    _ = user_info
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute(

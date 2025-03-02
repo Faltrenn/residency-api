@@ -1,17 +1,17 @@
 from http import HTTPMethod, HTTPStatus
-from common import Roles, body_keys_needed, middleware, route
+from common import Roles, UserInfo, body_keys_needed, middleware, route
 import database as db
 import models
-from routes import login
+from routes import roles
 from server import RequestHandler
 
 
 @route("/questionnaires", HTTPMethod.GET)
 @middleware([*Roles.all()])
-def get_questionnaires(rh: RequestHandler, role: Roles):
+def get_questionnaires(rh: RequestHandler, user_info: UserInfo):
     results = []
     conn, cur = db.get_connection_and_cursor()
-    if role is Roles.ADMIN:
+    if user_info.role is Roles.ADMIN:
         cur.execute(
             """SELECT * FROM questionnaire q
                INNER JOIN users p ON p.id = q.professor_id
@@ -24,23 +24,21 @@ def get_questionnaires(rh: RequestHandler, role: Roles):
 
         results = cur.fetchall()
     else:
-        for k, v in login.logins.items():
-            if v == rh.headers["token"]:
-                cur.execute(
-                    """SELECT * FROM questionnaire q
-                       INNER JOIN users p ON p.id = q.professor_id
-                       INNER JOIN users r ON r.id = q.resident_id
-                       INNER JOIN questions_answereds qa ON qa.questionnaire_id = q.id
-                       INNER JOIN questions q2 ON q2.id = qa.question_id
-                       INNER JOIN answers a ON a.id = qa.answer_id
-                       WHERE q.professor_id = ?
-                       ORDER BY q.id""",
-                    (k,),
-                )
+        cur.execute(
+            """SELECT * FROM questionnaire q
+               INNER JOIN users p ON p.id = q.professor_id
+               INNER JOIN users r ON r.id = q.resident_id
+               INNER JOIN questions_answereds qa ON qa.questionnaire_id = q.id
+               INNER JOIN questions q2 ON q2.id = qa.question_id
+               INNER JOIN answers a ON a.id = qa.answer_id
+               WHERE q.professor_id = ?
+               ORDER BY q.id""",
+            (user_info.id,),
+        )
 
-                results = cur.fetchall()
+        results = cur.fetchall()
 
-                db.cc_connection_and_cursor(conn, cur)
+        db.cc_connection_and_cursor(conn, cur)
 
     questionnaires = models.get_questionnaires(results)
 
@@ -50,16 +48,16 @@ def get_questionnaires(rh: RequestHandler, role: Roles):
 @route("/questionnaires", HTTPMethod.POST)
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(
-    ["procedure_title", "professor_id", "resident_id", "questions_answereds"]
+        ["procedure_title", "professor_id", "resident_id", "questions_answereds"]
 )
-def add_questionnaire(rh: RequestHandler, body: dict, role: Roles):
-    _ = role
+def add_questionnaire(rh: RequestHandler, body: dict, user_info: UserInfo):
+    _ = user_info
     conn, cur = db.get_connection_and_cursor()
     cur.execute(
         "INSERT INTO questionnaire (procedure_title, professor_id, resident_id) VALUES (?, ?, ?)",
         (
             body["procedure_title"],
-            body["professor_id"],
+            body["professor_id"] if user_info.role is Roles.ADMIN else user_info.id,
             body["resident_id"],
         ),
     )
@@ -83,15 +81,15 @@ def add_questionnaire(rh: RequestHandler, body: dict, role: Roles):
 @body_keys_needed(
     ["id", "procedure_title", "professor_id", "resident_id", "questions_answereds"]
 )
-def update_questionnaire(rh: RequestHandler, body: dict, role: Roles):
-    _ = role
+def update_questionnaire(rh: RequestHandler, body: dict, user_info: UserInfo):
+    _ = user_info
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
         "UPDATE questionnaire set procedure_title = ?, professor_id = ?, resident_id = ? WHERE id = ?",
         (
             body["procedure_title"],
-            body["professor_id"],
+            body["professor_id"] if user_info.role is Roles.ADMIN else user_info.id,
             body["resident_id"],
             body["id"],
         ),
@@ -117,7 +115,8 @@ def update_questionnaire(rh: RequestHandler, body: dict, role: Roles):
 @route("/questionnaires", HTTPMethod.DELETE)
 @middleware([Roles.ADMIN, Roles.TEACHER])
 @body_keys_needed(["id"])
-def remove_questionnaire(rh: RequestHandler, body: dict):
+def remove_questionnaire(rh: RequestHandler, body: dict, user_info: UserInfo):
+    _ = user_info
     conn, cur = db.get_connection_and_cursor()
 
     cur.execute(
