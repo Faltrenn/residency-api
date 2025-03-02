@@ -1,5 +1,5 @@
 from http import HTTPMethod, HTTPStatus
-from common import route
+from common import Roles, body_keys_needed, middleware, route
 import database as db
 import models
 from routes.login import getRoleByToken
@@ -8,15 +8,8 @@ from utils import get_body
 
 
 @route("/roles", HTTPMethod.GET)
+@middleware([Roles.ADMIN])
 def get_roles(rh: RequestHandler):
-    if "token" not in rh.headers:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    if (token := getRoleByToken(rh.headers["token"])) == None or token != "Admin":
-        rh.set_headers(HTTPStatus.UNAUTHORIZED)
-        return
-
     conn = db.get_connection()
     cur = conn.cursor()
 
@@ -27,12 +20,9 @@ def get_roles(rh: RequestHandler):
 
 
 @route("/roles", HTTPMethod.POST)
-def add_role(rh: RequestHandler):
-    body = get_body(rh)
-
-    if not ("title" in body):
-        raise ValueError("Invalid body")
-
+@middleware([Roles.ADMIN])
+@body_keys_needed(["title"])
+def add_role(rh: RequestHandler, body: dict):
     rh.set_headers(HTTPStatus.OK)
     conn = db.get_connection()
     cur = conn.cursor()
@@ -45,19 +35,10 @@ def add_role(rh: RequestHandler):
     conn.close()
 
 
-# TEST: Writed without test
 @route("/roles", HTTPMethod.PUT)
-def update_role(rh: RequestHandler):
-    if "token" not in rh.headers:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    if (token := getRoleByToken(rh.headers["token"])) == None or token != "Admin":
-        rh.set_headers(HTTPStatus.UNAUTHORIZED)
-        return
-
-    body = get_body(rh)
-
+@middleware([Roles.ADMIN])
+@body_keys_needed(["last_title", "title"])
+def update_role(rh: RequestHandler, body: dict):
     conn = db.get_connection()
     cur = conn.cursor()
 
@@ -71,24 +52,16 @@ def update_role(rh: RequestHandler):
     conn.commit()
     cur.close()
     conn.close()
+
     rh.set_headers(HTTPStatus.OK)
 
 
-# TEST: Writed without test
 @route("/roles", HTTPMethod.DELETE)
-def remove_role(rh: RequestHandler):
-    if "token" not in rh.headers:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    if (token := getRoleByToken(rh.headers["token"])) == None or token != "Admin":
-        rh.set_headers(HTTPStatus.UNAUTHORIZED)
-        return
-
+@middleware([Roles.ADMIN])
+@body_keys_needed(["title"])
+def remove_role(rh: RequestHandler, body: dict):
     conn = db.get_connection()
     cur = conn.cursor()
-
-    body = get_body(rh)
 
     cur.execute("DELETE FROM roles WHERE title = ?", (body["title"],))
 
