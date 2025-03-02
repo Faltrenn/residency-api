@@ -1,5 +1,5 @@
 from http import HTTPMethod, HTTPStatus
-from common import route
+from common import Roles, body_keys_needed, middleware, route
 import database as db
 import models
 from routes.login import getRoleByToken
@@ -8,15 +8,8 @@ from utils import get_body
 
 
 @route("/questions", HTTPMethod.GET)
+@middleware([Roles.ADMIN, Roles.TEACHER])
 def get_questions(rh: RequestHandler):
-    # if "token" not in rh.headers:
-    #     rh.set_headers(HTTPStatus.BAD_REQUEST)
-    #     return
-    #
-    # if (token := getRoleByToken(rh.headers["token"])) == None or token != "Admin":
-    #     rh.set_headers(HTTPStatus.UNAUTHORIZED)
-    #     return
-
     results = db.execute_queries(
         [
             (
@@ -35,20 +28,18 @@ def get_questions(rh: RequestHandler):
 
 
 @route("/questions", HTTPMethod.POST)
-def add_question(rh: RequestHandler):
-    body = get_body(rh)
-
-    if not ("title" in body and "answers" in body):
-        raise ValueError("Invalid body")
-
-    rh.set_headers(HTTPStatus.OK)
+@middleware([Roles.ADMIN])
+@body_keys_needed(["title", "answers"])
+def add_question(rh: RequestHandler, body: dict):
     conn = db.get_connection()
     cur = conn.cursor()
     cur.execute(
         "INSERT INTO questions (title) VALUES (?)",
         (body["title"],),
     )
+
     q_id = cur.lastrowid
+
     cur.executemany(
         "INSERT INTO answers (title, question_id) VALUES (?, ?)",
         [(answer["title"], q_id) for answer in body["answers"]],
@@ -58,20 +49,13 @@ def add_question(rh: RequestHandler):
     cur.close()
     conn.close()
 
+    rh.set_headers(HTTPStatus.OK)
 
-# TEST: Writed without test
+
 @route("/questions", HTTPMethod.PUT)
-def update_question(rh: RequestHandler):
-    if "token" not in rh.headers:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    if (token := getRoleByToken(rh.headers["token"])) == None or token != "Admin":
-        rh.set_headers(HTTPStatus.UNAUTHORIZED)
-        return
-
-    body = get_body(rh)
-
+@middleware([Roles.ADMIN])
+@body_keys_needed(["id", "title", "answers"])
+def update_question(rh: RequestHandler, body: dict):
     conn = db.get_connection()
     cur = conn.cursor()
 
@@ -91,11 +75,6 @@ def update_question(rh: RequestHandler):
         [(answer["title"], body["id"]) for answer in body["answers"]],
     )
 
-    # cur.executemany(
-    #     "UPDATE answers SET title = ? WHERE (id = ?)",
-    #     [(answer["title"], answer["id"]) for answer in body["answers"]],
-    # )
-
     conn.commit()
     cur.close()
     conn.close()
@@ -103,30 +82,17 @@ def update_question(rh: RequestHandler):
     rh.set_headers(HTTPStatus.OK)
 
 
-# TEST: Writed without test
 @route("/questions", HTTPMethod.DELETE)
-def remove_question(rh: RequestHandler):
-    if "token" not in rh.headers:
-        rh.set_headers(HTTPStatus.BAD_REQUEST)
-        return
-
-    if (token := getRoleByToken(rh.headers["token"])) == None or token != "Admin":
-        rh.set_headers(HTTPStatus.UNAUTHORIZED)
-        return
-
+@middleware([Roles.ADMIN])
+@body_keys_needed(["id"])
+def remove_question(rh: RequestHandler, body: dict):
     conn = db.get_connection()
     cur = conn.cursor()
-
-    body = get_body(rh)
 
     cur.execute(
         "DELETE FROM answers WHERE question_id = ?",
         (body["id"],),
     )
-    # cur.executemany(
-    #     "DELETE FROM answers WHERE (id = ?)",
-    #     [(answer["id"],) for answer in body["answers"]],
-    # )
 
     cur.execute("DELETE FROM questions WHERE id = ?", (body["id"],))
 
