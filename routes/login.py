@@ -1,7 +1,6 @@
-from common import Roles, route
+from common import Roles, body_keys_needed, route
 from http import HTTPMethod, HTTPStatus
 import string
-import json
 import random
 
 from server import RequestHandler
@@ -12,15 +11,9 @@ logins = {}  # {user_id: token}
 
 
 @route("/login", HTTPMethod.POST)
-def login(rh: RequestHandler):
+@body_keys_needed(["user", "pass"])
+def login(rh: RequestHandler, body: dict):
     try:
-        content_length = int(rh.headers.get("Content-Length", 0))
-        body_data = rh.rfile.read(content_length).decode("utf-8")
-        body = json.loads(body_data)
-
-        if not isinstance(body, dict) or "user" not in body or "pass" not in body:
-            raise ValueError("Invalid body")
-
         user = auth_user(body["user"], body["pass"])
         if user:
             user_id = user["id"]
